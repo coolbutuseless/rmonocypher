@@ -42,11 +42,6 @@ The key features are:
     * Using ['Argon2'](https://en.wikipedia.org/wiki/Argon2) for password-based key derivation
 
 
-# TODO before release
-
-* Rename `rmonocypher` to `rmonocypher`
-* Convert some docs to vignettes
-
 ## What's in the box
 
 * `cryptfile()` is a connection for reading/writing encrypted data.  
@@ -189,25 +184,29 @@ key <- argon2("my secret", salt = isaac(16))
 
 Argon2 is a resource intensive password-based key derivation scheme.
 
-Use `argon2()` to generate random bytes for keys from a pass-phrase.
+Use `argon2()` to generate random bytes for keys from a pass-phrase.  Defend 
+against attackers using rainbow tables by providing extra bytes of `salt`.
 
 ```{r echo = FALSE}
 set.seed(2024)
 ```
 
 ```{r}
-# For the sake of convenience for novice users, a salt will be 
-# derived internally from the pass-phrase.
+# When no salt is provided, a salt will be 
+# derived internally from the pass-phrase.  This is convenient, but 
+# not a great security practice (depending on your expected attacker)
 argon2("my secret")
 
-# Calling 'argon2()' without a salt is equivalent to using the pass-phrase
-# as the salt.  This is not the best security practice
-argon2("my secret", salt = "my secret")
+# Use text as the salt
+argon2("my secret", salt = "salt and vinegar")
 
-# Best practice is to use your own random bytes for the salt
+# Use a 32-character hexadecimal string as the salt
+argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
+
+# Use random bytes for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 
-#Can also use 'isaac()' to source random bytes
+# Use 'isaac()' to source random bytes for the salt
 argon2("my secret", salt = isaac(16))
 ```
 

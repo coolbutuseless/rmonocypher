@@ -22,11 +22,6 @@ The key features are:
   - Using [‘Argon2’](https://en.wikipedia.org/wiki/Argon2) for
     password-based key derivation
 
-# TODO before release
-
-- Rename `rmonocypher` to `rmonocypher`
-- Convert some docs to vignettes
-
 ## What’s in the box
 
 - `cryptfile()` is a connection for reading/writing encrypted data.
@@ -190,10 +185,13 @@ key <- argon2("my secret", salt = isaac(16))
 Argon2 is a resource intensive password-based key derivation scheme.
 
 Use `argon2()` to generate random bytes for keys from a pass-phrase.
+Defend against attackers using rainbow tables by providing extra bytes
+of `salt`.
 
 ``` r
-# For the sake of convenience for novice users, a salt will be 
-# derived internally from the pass-phrase.
+# When no salt is provided, a salt will be 
+# derived internally from the pass-phrase.  This is convenient, but 
+# not a great security practice (depending on your expected attacker)
 argon2("my secret")
 ```
 
@@ -201,16 +199,23 @@ argon2("my secret")
     #> [26] 50 26 89 c4 ed 16 d0
 
 ``` r
-# Calling 'argon2()' without a salt is equivalent to using the pass-phrase
-# as the salt.  This is not the best security practice
-argon2("my secret", salt = "my secret")
+# Use text as the salt
+argon2("my secret", salt = "salt and vinegar")
 ```
 
-    #>  [1] bd 75 49 be f4 10 0b 88 8c 47 e4 21 b0 3c 52 fe e5 8b 28 5f cc 40 df a4 c0
-    #> [26] 50 26 89 c4 ed 16 d0
+    #>  [1] 16 df 28 56 ba 2e cc 02 0f f5 06 83 1a 69 1b 1d 92 61 69 48 19 7f b7 4f a6
+    #> [26] 51 bf c8 9c ad 65 e4
 
 ``` r
-# Best practice is to use your own random bytes for the salt
+# Use a 32-character hexadecimal string as the salt
+argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
+```
+
+    #>  [1] 22 16 b7 00 af 05 98 4f 21 d7 46 54 87 f2 1d e0 09 6f 7a aa 16 4d 2b 56 c5
+    #> [26] 48 03 e3 89 1e c0 71
+
+``` r
+# Use random bytes for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 ```
 
@@ -218,7 +223,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
     #> [26] 40 6a ee b7 b3 c9 3e
 
 ``` r
-#Can also use 'isaac()' to source random bytes
+# Use 'isaac()' to source random bytes for the salt
 argon2("my secret", salt = isaac(16))
 ```
 
