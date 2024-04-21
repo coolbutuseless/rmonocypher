@@ -1,0 +1,26 @@
+Package: rmonocypher
+Type: Package
+Title: Connection for Automatic Encryption and Decryption of Data in Files
+Version: 0.1.0
+Authors@R: c(
+    person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
+    person("Loup", "Vaillant", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
+    person("Michael", "Savage", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
+    person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
+    person("Bob", "Jenkins", role = c("aut"), comment = "Author of the included 'isaac' 'RNG' code")
+    )
+Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
+Description: Encrypt and decrypt data automatically through a connection.
+    This implementation  R interface to  
+    the 'monocypher' 'C' library (available from <https://monocypher.org>).
+URL: https://github.com/coolbutuseless/rmonocypher
+BugReports: https://github.com/coolbutuseless/rmonocypher/issues
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.1
+Suggests: 
+    testthat (>= 3.0.0)
+Depends:
+    R (>= 3.4.0)
+Copyright: This package includes the 'monocypher' library written by Loup Vaillant.  See file 'inst/LICENSE-monocypher.md' for details.
+Config/testthat/edition: 3
