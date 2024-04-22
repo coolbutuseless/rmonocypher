@@ -188,7 +188,7 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
   
   // Extras
   crypto_argon2_extras extras = {0};   /* Extra parameters unused */
-
+  
   // Allocate work area.
   void *work_area = malloc((size_t)config.nb_blocks * 1024);
   
@@ -202,6 +202,32 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 }
 
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Bytes to hex
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+char *bytes_to_hex(uint8_t *buf, size_t len) {
+  static const char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  
+  char *str = (char *)calloc(len * 2 + 1, 1);
+  if (str == NULL) {
+    error("bytes_to_hex() couldn't allocate %zu bytes", len * 2 + 1);
+  }
+  str[0] = '\0';
+
+  for (size_t i = 0; i < len; i++) {
+    str[2 * i]     = hexmap[(buf[i] & 0xF0) >> 4];
+    str[2 * i + 1] = hexmap[ buf[i] & 0x0F];
+  }
+
+  str[len * 2] = '\0';
+  return str;
+}
+
+
+
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // R-callable function for deriving a key from a pass-phrase
 //
@@ -209,7 +235,7 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 // @param salt_ 16 byte salt. Or hex string. Or shorter string to be expanded
 // @param hash_length_ output key length
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_) {
+SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_, SEXP type_) {
   
   // Password
   const char *password = CHAR(STRING_ELT(password_, 0));
@@ -219,13 +245,37 @@ SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_) {
   uint8_t salt[16] = { 0 };
   unpack_salt(salt_, salt);
   
+  SEXP hash_ = R_NilValue;
+  
+  int N = asInteger(hash_length_);
+  
   // Output hash
-  SEXP hash_ = PROTECT(allocVector(RAWSXP, asInteger(hash_length_)));
-  uint8_t *hash = RAW(hash_);
-  
-  argon_internal((uint8_t *)password, pass_size, salt, hash, (uint32_t)asInteger(hash_length_));
-  
+  const char *type = CHAR(STRING_ELT(type_, 0));
+  if (strcmp(type, "raw") == 0) {
+    hash_ = PROTECT(allocVector(RAWSXP, N));
+    uint8_t *hash = RAW(hash_);
+    argon_internal((uint8_t *)password, pass_size, salt, hash, (uint32_t)N);
+  } else {
+    
+    uint8_t *hash_buf = (uint8_t *)calloc(N, 1);
+    if (hash_buf == NULL) {
+      error("argon2_(): Couldn't allocate hash buffer");
+    }
+    
+    argon_internal((uint8_t *)password, pass_size, salt, hash_buf, (uint32_t)N);
+    
+    char *hex = bytes_to_hex(hash_buf, N);
+    hash_ = PROTECT(allocVector(STRSXP, 1));
+    SET_STRING_ELT(hash_, 0, mkChar(hex));
+    
+    free(hash_buf);
+  }
   
   UNPROTECT(1);
   return hash_;
 }
+
+// for (i in 1:10) print(argon2("hello", type = "raw"))
+// for (i in 1:10) print(argon2("hello", type = "string"))
+
+

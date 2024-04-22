@@ -7,7 +7,7 @@ extern SEXP cryptfile_(SEXP description_, SEXP key_, SEXP mode_, SEXP additional
 extern SEXP mc_encrypt_(SEXP x_  , SEXP key_,             SEXP additional_data_);
 extern SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_);
 
-extern SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_);
+extern SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_, SEXP type_);
 extern SEXP isaac_(SEXP n_);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +21,7 @@ static const R_CallMethodDef CEntries[] = {
   {"mc_encrypt_", (DL_FUNC) &mc_encrypt_, 3},
   {"mc_decrypt_", (DL_FUNC) &mc_decrypt_, 4},
   
-  {"argon2_", (DL_FUNC) &argon2_, 3},
+  {"argon2_", (DL_FUNC) &argon2_, 4},
   {"isaac_", (DL_FUNC) &isaac_, 1},
   
   {NULL, NULL, 0}

@@ -4,7 +4,7 @@
 \alias{argon2}
 \title{Generate bytes from a pass-phrase using Argon2 password-based key derivation}
 \usage{
-argon2(passphrase, salt = passphrase, length = 32)
+argon2(passphrase, salt = passphrase, length = 32, type = "string")
 }
 \arguments{
 \item{passphrase}{A character string used to derive the random bytes}
@@ -18,6 +18,9 @@ The 'salt' may also be a non-hexadecimal string, in which case a real
 salt will be created by using Argon2 with a default internal salt.}
 
 \item{length}{Number of bytes to output. Default: 32}
+
+\item{type}{Should the data be returned as raw bytes? Default: 'string'. 
+Possible values 'string' or 'raw'}
 }
 \value{
 raw vector of the requested length

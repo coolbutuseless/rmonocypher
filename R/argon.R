@@ -32,6 +32,8 @@
 #'        See \url{https://en.wikipedia.org/wiki/Salt_(cryptography)} for more details.
 #'        The 'salt' may also be a non-hexadecimal string, in which case a real
 #'        salt will be created by using Argon2 with a default internal salt.
+#' @param type Should the data be returned as raw bytes? Default: 'string'. 
+#'        Possible values 'string' or 'raw'
 #'
 #' @return raw vector of the requested length
 #' @export
@@ -51,6 +53,6 @@
 #' #Can also use 'isaac()' to source random bytes
 #' argon2("my secret", salt = isaac(16))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-argon2 <- function(passphrase, salt = passphrase, length = 32) {
-  .Call(argon2_, passphrase, salt, length);
+argon2 <- function(passphrase, salt = passphrase, length = 32, type = 'string') {
+  .Call(argon2_, passphrase, salt, length, type);
 }
