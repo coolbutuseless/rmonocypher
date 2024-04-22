@@ -1,13 +1,13 @@
 Package: rmonocypher
 Type: Package
 Title: Connection for Automatic Encryption and Decryption of Data in Files
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
     person("Loup", "Vaillant", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
     person("Michael", "Savage", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
     person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
-    person("Bob", "Jenkins", role = c("aut"), comment = "Author of the included 'isaac' 'RNG' code")
+    person("Bob", "Jenkins", role = c("aut"), comment = "Author of the included public domain 'isaac' 'RNG' code")
     )
 Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
 Description: Encrypt and decrypt data automatically through a connection.
