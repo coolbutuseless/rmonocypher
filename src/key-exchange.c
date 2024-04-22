@@ -39,20 +39,7 @@ SEXP create_public_key_(SEXP your_secret_key_, SEXP type_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Return value
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  SEXP public_key_ = R_NilValue;
-  const char *type = CHAR(STRING_ELT(type_, 0));
-  
-  if (strcmp(type, "raw") == 0) {
-    public_key_ = PROTECT(allocVector(RAWSXP, 32));
-    memcpy(RAW(public_key_), public_key, 32);
-  } else {
-    char *hex = bytes_to_hex(public_key, 32);
-    public_key_ = PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(public_key_, 0, mkChar(hex));
-  }
-  
-  UNPROTECT(1);
-  return public_key_;
+  return wrap_bytes_for_return(public_key, 32, type_);
 }
 
 
@@ -122,24 +109,9 @@ SEXP create_shared_key_(SEXP their_public_key_, SEXP your_secret_key_, SEXP type
   crypto_blake2b_final (&ctx, shared_key);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // Return value
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  SEXP shared_key_ = R_NilValue;
-  const char *type = CHAR(STRING_ELT(type_, 0));
-  
-  if (strcmp(type, "raw") == 0) {
-    shared_key_ = PROTECT(allocVector(RAWSXP, 32));
-    memcpy(RAW(shared_key_), shared_key, 32);
-  } else {
-    char *hex = bytes_to_hex(shared_key, 32);
-    shared_key_ = PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(shared_key_, 0, mkChar(hex));
-  }
-  
-  
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Tidy and return
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  SEXP shared_key_ = PROTECT(wrap_bytes_for_return(shared_key, 32, type_));
   crypto_wipe(shared_key   , 32);
   crypto_wipe(shared_secret, 32);
   UNPROTECT(1); 

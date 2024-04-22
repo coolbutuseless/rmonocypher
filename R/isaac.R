@@ -6,6 +6,7 @@
 #' \url{https://burtleburtle.net/bob/rand/isaacafa.html} for more information
 #' on this random number generator.
 #' 
+#' @inheritParams argon2
 #' @param n number of random bytes to return. Acceptable range
 #'        [1, 1024]
 #' 
@@ -15,6 +16,6 @@
 #' @examples
 #' isaac(32)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-isaac <- function(n) {
-  .Call(isaac_, n)
+isaac <- function(n, type = 'string') {
+  .Call(isaac_, n, type)
 }

@@ -169,5 +169,27 @@ void unpack_key(SEXP key_, uint8_t key[32]) {
 }
 
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Pack bytes for return
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SEXP wrap_bytes_for_return(uint8_t *buf, size_t N, SEXP type_) {
+  
+  SEXP res_ = R_NilValue;
+  
+  const char *type = CHAR(STRING_ELT(type_, 0));
+  
+  if (strcmp(type, "raw") == 0) {
+    res_ = PROTECT(allocVector(RAWSXP, (R_xlen_t)N));
+    memcpy(RAW(res_), buf, N);
+  } else {
+    char *hex = bytes_to_hex(buf, N);
+    res_ = PROTECT(allocVector(STRSXP, 1));
+    SET_STRING_ELT(res_, 0, mkChar(hex));
+  }
+  
+  UNPROTECT(1);
+  return res_;
+}
+
 
 

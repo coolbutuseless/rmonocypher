@@ -170,7 +170,9 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t *hash, uint32_t hash_length) {
   
-  // Config
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Argon2 Config
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   crypto_argon2_config config = {
     .algorithm = CRYPTO_ARGON2_ID,            /* Argon2i        */
     .nb_blocks = 100000,                     /* 100 megabytes   */
@@ -178,7 +180,9 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
     .nb_lanes  = 1                           /* Single-threaded */
   };
   
-  // Inputs
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Argon2 Inputs
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   crypto_argon2_inputs inputs = {
     .pass      = (uint8_t *)password,  /* User password */
     .salt      = salt,                 /* Salt for the password */
@@ -186,17 +190,23 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
     .salt_size = SALTSIZE
   };
   
-  // Extras
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Argon2 Extras
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   crypto_argon2_extras extras = {0};   /* Extra parameters unused */
   
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Allocate work area.
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   void *work_area = malloc((size_t)config.nb_blocks * 1024);
   
   if (work_area == NULL) {
     error("argon2_(): Could not allocate memory for 'work_area'");
   } 
   
-  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Derive Key
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   crypto_argon2(hash, hash_length, work_area, config, inputs, extras);
   free(work_area);
 }
@@ -212,45 +222,38 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_, SEXP type_) {
   
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Password
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   const char *password = CHAR(STRING_ELT(password_, 0));
   size_t pass_size = (size_t)strlen(password);
   
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Salt
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t salt[16] = { 0 };
   unpack_salt(salt_, salt);
   
-  SEXP hash_ = R_NilValue;
-  
-  int N = asInteger(hash_length_);
-  
-  // Output hash
-  const char *type = CHAR(STRING_ELT(type_, 0));
-  if (strcmp(type, "raw") == 0) {
-    hash_ = PROTECT(allocVector(RAWSXP, N));
-    uint8_t *hash = RAW(hash_);
-    argon_internal((uint8_t *)password, pass_size, salt, hash, (uint32_t)N);
-  } else {
-    
-    uint8_t *hash_buf = (uint8_t *)calloc(N, 1);
-    if (hash_buf == NULL) {
-      error("argon2_(): Couldn't allocate hash buffer");
-    }
-    
-    argon_internal((uint8_t *)password, pass_size, salt, hash_buf, (uint32_t)N);
-    
-    char *hex = bytes_to_hex(hash_buf, N);
-    hash_ = PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(hash_, 0, mkChar(hex));
-    
-    free(hash_buf);
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Hash
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  size_t N = (size_t)asInteger(hash_length_);
+  uint8_t *hash = (uint8_t *)calloc(N, 1);
+  if (hash == NULL) {
+    error("argon2_(): Couldn't allocate hash buffer");
   }
   
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Derive key
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  argon_internal((uint8_t *)password, pass_size, salt, hash, (uint32_t)N);
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Tidy and return
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  SEXP hash_ = PROTECT(wrap_bytes_for_return(hash, N, type_));
+  free(hash);
   UNPROTECT(1);
   return hash_;
 }
-
-// for (i in 1:10) print(argon2("hello", type = "raw"))
-// for (i in 1:10) print(argon2("hello", type = "string"))
-
 

@@ -79,7 +79,8 @@ SEXP mc_encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Cipher Text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  SEXP cipher_text_    = PROTECT(allocVector(RAWSXP, (R_xlen_t)(payload_size + NONCESIZE + MACSIZE + LENGTHSIZE)));
+  size_t N = payload_size + NONCESIZE + MACSIZE + LENGTHSIZE;
+  SEXP cipher_text_ = PROTECT(allocVector(RAWSXP, N));
   uint8_t *cipher_text = RAW(cipher_text_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,6 +173,11 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
   size_t ntotal = (size_t)xlength(src_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Cipher text
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  uint8_t *cipher_text = RAW(src_);
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // plaintext buffer for decrypted output
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t *plaintext = (uint8_t *)calloc(ntotal, 1);
@@ -186,11 +192,6 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t key[32];
   unpack_key(key_, key);
-  
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // Cipher text
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  const uint8_t *cipher_text = RAW(src_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Nonce

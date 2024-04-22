@@ -4,11 +4,14 @@
 \alias{isaac}
 \title{Use ISAAC to generate cryptographically secure pseudorandom numbers}
 \usage{
-isaac(n)
+isaac(n, type = "string")
 }
 \arguments{
 \item{n}{number of random bytes to return. Acceptable range
 [1, 1024]}
+
+\item{type}{Should the data be returned as raw bytes? Default: 'string'. 
+Possible values 'string' or 'raw'}
 }
 \value{
 a raw vector of random bytes of the requested length

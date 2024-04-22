@@ -17,12 +17,13 @@
 
 #include "isaac-rand.h"
 #include "isaac-r.h"
+#include "utils.h"
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Return the chunk of 256 uint32_t random integers as 1024 uint8_t
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP isaac_(SEXP n_) {
+SEXP isaac_(SEXP n_, SEXP type_) {
   ub4 i;
   randctx ctx;
   ctx.randa=ctx.randb=ctx.randc=(ub4)0;
@@ -33,7 +34,7 @@ SEXP isaac_(SEXP n_) {
   }
   
   GetRNGstate();
-  // Initialise buffers
+  // Initialise buffers with random numbers from R 'runif()'
   for (i=0; i<256; ++i) {
     ctx.randrsl[i] = (uint32_t)(unif_rand() * INT32_MAX);
   }
@@ -43,24 +44,11 @@ SEXP isaac_(SEXP n_) {
   // Arg = TRUE means to use ctx.randrsl to init state
   randinit(&ctx, TRUE);
   
+  // Run it twice. Just because
   isaac(&ctx);
   isaac(&ctx);
   
-  SEXP res_ = PROTECT(allocVector(RAWSXP, n));
-  
-  memcpy(RAW(res_), ctx.randrsl, n);
-  
-  // for (i=0; i<2; ++i) {
-  //   isaac(&ctx);
-  //   for (j=0; j<256; ++j) {
-  //     Rprintf("%.8lx ",ctx.randrsl[j]);
-  //     if ((j&7)==7) Rprintf("\n");
-  //   }
-  //   Rprintf("\n");
-  // }
-
-  UNPROTECT(1);  
-  return res_;
+  return wrap_bytes_for_return((uint8_t *)ctx.randrsl, n, type_);
 }
 
 
