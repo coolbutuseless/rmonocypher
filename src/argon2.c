@@ -160,7 +160,13 @@
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Internal argon2 function
+// Internal argon2 function to wrap monocypher call
+//
+// @param password pointer to plain text
+// @param pass_size strlen(password)
+// @param salt 16-byte salt
+// @param hash destination buffer for the calculated hash
+// @param hash_length length of hash in bytes. Use 32 for key.
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t *hash, uint32_t hash_length) {
   
@@ -197,7 +203,11 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// R-callable functions
+// R-callable function for deriving a key from a pass-phrase
+//
+// @param password_ pass phrase
+// @param salt_ 16 byte salt. Or hex string. Or shorter string to be expanded
+// @param hash_length_ output key length
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_) {
   
