@@ -204,31 +204,6 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Bytes to hex
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-char *bytes_to_hex(uint8_t *buf, size_t len) {
-  static const char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                                '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-  
-  char *str = (char *)calloc(len * 2 + 1, 1);
-  if (str == NULL) {
-    error("bytes_to_hex() couldn't allocate %zu bytes", len * 2 + 1);
-  }
-  str[0] = '\0';
-
-  for (size_t i = 0; i < len; i++) {
-    str[2 * i]     = hexmap[(buf[i] & 0xF0) >> 4];
-    str[2 * i + 1] = hexmap[ buf[i] & 0x0F];
-  }
-
-  str[len * 2] = '\0';
-  return str;
-}
-
-
-
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // R-callable function for deriving a key from a pass-phrase
 //
 // @param password_ pass phrase
