@@ -141,6 +141,7 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Tidy and return encrypted text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  crypto_wipe(key, sizeof(key));
   crypto_wipe(&ctx, sizeof(ctx));
   UNPROTECT(1);
   return cipher_text_;
@@ -299,6 +300,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
     // Sanity check it went OK
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (res < 0) {
+      crypto_wipe(key, sizeof(key));
       crypto_wipe(&ctx, sizeof(ctx));
       free(plaintext);
       error("decrypt_(): Decryption failed\n");
@@ -331,6 +333,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Tidy and return decrypted text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  crypto_wipe(key, sizeof(key));
   crypto_wipe(&ctx, sizeof(ctx));
   free(plaintext);
   UNPROTECT(1);

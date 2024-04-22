@@ -22,5 +22,7 @@ Suggests:
     testthat (>= 3.0.0)
 Depends:
     R (>= 3.4.0)
-Copyright: This package includes the 'monocypher' library written by Loup Vaillant.  See file 'inst/LICENSE-monocypher.md' for details.
+Copyright: This package includes the 'monocypher' library written by Loup Vaillant,
+    Michael Savage and Fabio Scotomi. See file 'inst/LICENSE-monocypher.md' for 
+    the license for 'monocypher'.
 Config/testthat/edition: 3

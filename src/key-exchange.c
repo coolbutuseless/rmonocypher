@@ -39,7 +39,10 @@ SEXP create_public_key_(SEXP your_secret_key_, SEXP type_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Return value
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  return wrap_bytes_for_return(public_key, 32, type_);
+  SEXP res_ = PROTECT(wrap_bytes_for_return(public_key, 32, type_));
+  crypto_wipe(private_key, 32);
+  UNPROTECT(1);
+  return res_;
 }
 
 
@@ -112,8 +115,9 @@ SEXP create_shared_key_(SEXP their_public_key_, SEXP your_secret_key_, SEXP type
   // Tidy and return
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   SEXP shared_key_ = PROTECT(wrap_bytes_for_return(shared_key, 32, type_));
-  crypto_wipe(shared_key   , 32);
-  crypto_wipe(shared_secret, 32);
+  crypto_wipe(your_secret_key , 32);
+  crypto_wipe(shared_key      , 32);
+  crypto_wipe(shared_secret   , 32);
   UNPROTECT(1); 
   return shared_key_;
 }

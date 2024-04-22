@@ -398,9 +398,10 @@ void cryptfile_destroy(struct Rconn *rconn) {
   cryptfile_state *cstate = (cryptfile_state *)rconn->private;
   if (cstate->verbosity > 0) Rprintf("cryptfile_destroy()\n");
   
-  crypto_wipe(&cstate->ctx, sizeof(cstate->ctx));
+  crypto_wipe(cstate->key, sizeof(cstate->key));
   free(cstate->buf);
   free(cstate->linebuf);
+  crypto_wipe(&cstate->ctx, sizeof(cstate->ctx));
   
   free(cstate); 
 }

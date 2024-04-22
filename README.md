@@ -11,7 +11,7 @@
 `{rmonocypher}` provides easy-to-use tools for encrypting data in R,
 based on the [`monocypher`](https://monocypher.org/) library.
 
-The key features are:
+#### Features
 
 - Seamless encryption with many R functions using a `connection`
 - Easy encryption of data and strings
@@ -22,6 +22,20 @@ The key features are:
   - Using [‘Argon2’](https://en.wikipedia.org/wiki/Argon2) for
     password-based key derivation
 
+#### Motivating example
+
+Use `{rmonocypher}` to write R data to an encrypted file on a shared
+drive, dropbox or cloud.
+
+The data is not readable by others, but easily recoverable if the `key`
+is known.
+
+``` r
+saveRDS(results, cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
+
+readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
+```
+
 ## What’s in the box
 
 - `cryptfile()` is a connection for reading/writing encrypted data.
@@ -30,14 +44,25 @@ The key features are:
     `write.csv()`, `png::writePNG()` etc
 - `encrypt()` and `decrypt()` are for encrypting and decrypting raw
   vectors and strings
-- `argon2()` derives random bytes (e.g. a `key`) from a pass-phrase
+- `argon2()` derives encryption keys from pass-phrases
 - `create_public_key()` and `create_shared_key()` can be used to perform
   key exchange over an insecure channel (i.e. Public Key Cryptography)
 - `isaac()` is a cryptographic RNG for generating random bytes
 
+## \`monocypher’
+
+The package relies on the cryptographic algorithms supplied by
+[`monocypher`](https://monocypher.org/)
+
+- x25519 key exchange (Public Key Cryptography)
+- RFC 8439 [‘Authenticated Encryption with Additional Data
+  (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
+  i.e. ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305
+  message authentication code.
+
 ## Installation
 
-You can install the development version of `rmonocypher` from
+To install `rmonocypher` from
 [GitHub](https://github.com/coolbutuseless/rmonocypher) with:
 
 ``` r
@@ -150,20 +175,26 @@ decrypt(enc, key = "my secret", type = 'string')
 
 # Encryption keys
 
+The encryption `key` is the core secret information that allows for
+encrypting data.
+
 The `key` for encryption may be one of:
 
 - A 32-byte raw vector
 - A 64-character hexadecimal string
-- Any other length string is also acceptable. In this case, `argon2()`
-  will be used to derive a 32-byte key from this text. Note: this method
-  will use a default, fixed salt which will reduce the strength of this
-  encryption when facing a skilled adversary.
+- A pass-phrase
 
-The key may be set explicitly when the function is called, but can also
-be set globally for the current session using
-`options(MONOCYPHER_KEY = "...")`
+The `key` may be created by:
 
-Some valid keys for encryption are:
+- Using random bytes from a cryptographically secure source
+- Using Argon2 to derive random bytes from a pass-phrase
+- Creating a shared key through key exchange with another person
+
+When calling functions in `{rmonocypher}`, the key may be set explicitly
+when the function is called, but can also be set globally for the
+current session using `options(MONOCYPHER_KEY = "...")`
+
+## Using random bytes as a key
 
 ``` r
 # Random raw bytes
@@ -174,26 +205,26 @@ key <- isaac(32)
 
 # 64-character hexadecimal string
 key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
-
-# Output from argon2() using an explicit salt
-key <- argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
-
-# Output from argon2() using an random bytes
-key <- argon2("my secret", salt = isaac(16))
 ```
 
-# Argon2: Password-based Key Derivation
+## Argon2: Password-based Key Derivation
 
 Argon2 is a resource intensive password-based key derivation scheme.
 
-Use `argon2()` to generate random bytes for keys from a pass-phrase.
-Defend against attackers using rainbow tables by providing extra bytes
-of `salt`.
+Use `argon2()` to generate random bytes for keys from a pass-phrase. It
+is recommended to further defend against attackers using rainbow tables
+by providing extra bytes of `salt`.
+
+If no explicit `salt` is provided, a salt will be derived internally
+from the pass-phrase. This is deterministic such that the same
+pass-phase will always generate the same key. This is convenient, but
+not as secure as using another pass-phrase or random bytes for the
+`salt`.
 
 ``` r
 # When no salt is provided, a salt will be 
 # derived internally from the pass-phrase.  This is convenient, but 
-# not a great security practice (depending on your expected attacker)
+# not as secure as using random bytes.
 argon2("my secret")
 ```
 
@@ -214,18 +245,65 @@ argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
     #> [1] "2216b700af05984f21d7465487f21de0096f7aaa164d2b56c54803e3891ec071"
 
 ``` r
-# Use random bytes for the salt
+# Use 16-bytes of random data for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 ```
 
     #> [1] "368d4613996f6d9083524bfacf972117fc40953461a248b9c5406aeeb7b3c93e"
 
 ``` r
-# Use 'isaac()' to source random bytes for the salt
+# Use 'isaac()' to source 16 random bytes for the salt
 argon2("my secret", salt = isaac(16))
 ```
 
     #> [1] "442a80ec735d1043fc22322e28e87f0ce908890e1b39f03b2bd6669831a43025"
+
+## Securely exchange keys over insecure channels with public key encryption.
+
+**Note:** This is an advanced topic, and not essential for regular use
+of encryption when only you are accessing data, or you have a secure way
+to share the key with others.
+
+`{rmonocypher}` implement public-key cryptography using x25519. X25519
+is an elliptic curve Diffie-Hellman key exchange using Curve25519. It
+allows two parties to jointly agree on a shared secret using an insecure
+channel.
+
+Steps:
+
+1.  Both users create a secret key (these are never shared!)
+2.  Both users derive the public key from their secret key
+3.  Users swap their public keys. These do not need to be kept secure.
+4.  Both users use their secret key in conjunction with the other user’s
+    public key to derive **the exact same key** !
+5.  Now both users know the same shared key and can encrypt and decrypt
+    messages from each other.
+
+``` r
+# You: Create a secret key and a public key.
+# You: Share the public key with other party
+your_secret <- argon2("hello")
+your_public <- create_public_key(your_secret)
+
+# They: Create a secret key and a public key
+# They: Share their public key with you
+their_secret <- argon2("goodbye")
+their_public <- create_public_key(their_secret)
+
+# You: Use their public key and your secret key
+#      to derive the common shared key
+create_shared_key(their_public, your_secret)
+```
+
+    #> [1] "e944b1aad518537ab1a8e2194565b9fc9f75f7abdff3978872afb4d70575c9fa"
+
+``` r
+# They: Use your public key and their secret key
+#       to derive the same shared key!
+create_shared_key(your_public, their_secret)
+```
+
+    #> [1] "e944b1aad518537ab1a8e2194565b9fc9f75f7abdff3978872afb4d70575c9fa"
 
 # Additional data
 
@@ -300,29 +378,44 @@ decrypt(letter$message, key = key, type = 'string', additional_data = letter$add
 
 # Technical Notes
 
-- The file structure is:
-  - `[nonce] [frame] [frame] ... [frame]`
-    - `[nonce]` = 24 bytes
-    - A `[frame]` = `[payload size] [mac] [payload]`
-      - `[payload size]` = 8 bytes
-      - `[mac]` = 16 bytes
-      - `[payload]` is `payload size` bytes
+- The nonce used within ‘monocypher’ is 24-bytes and is large enough
+  that counter/ratcheting mechanisms do not need to be used to
+  uniqueness - 24 random bytes (192 bits) of randomness is sufficient
+  that nonce reuse is not an issue.
 - The nonce is created internally using random bytes from the ISAAC
-  random number generator
+  random number generator.  
 - There are no magic bytes pre-pended to the data to identify it as
-  encrypted.
+  encrypted, but the `payload size` field in the file structure is
+  easily identifiable (see below).
 - In general when encrypting data using Authenticated Encryption:
   - these should be kept secret:
     - the original data (obviously!)
     - the encryption key.
   - these elements do not need to be kept secret:
     - MAC - message authentication code
-    - Number of bytes
+    - Number of bytes of data
     - Nonce
     - Salt (if `argon2()` is being used to derive `key` from a
       pass-phrase)
 
-#### Built-in libraries
+### File structure
+
+The file structure for encrypted data created by this package is
+documented here.
+
+The file must hold multiple chunks of streaming encrypted data, each
+chunk has a header giving the number of encrypted bytes (payload size)
+and a MAC (Message Authentication Code). The `nonce` is stored once at
+the beginning of the file.
+
+- `[nonce] [frame] [frame] ... [frame]`
+  - `[nonce]` = 24 bytes
+  - `[frame]` = `[payload size] [mac] [payload]`
+    - `[payload size]` = 8 bytes
+    - `[mac]` = 16 bytes
+    - `[payload]` is a sequence of `payload size` bytes
+
+### Built-in libraries
 
 This package uses the [monocypher](https://monocypher.org) encryption
 library v4.0.2 to provide ‘authenticated encryption with additional
