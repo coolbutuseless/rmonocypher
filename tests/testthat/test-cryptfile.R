@@ -1,28 +1,28 @@
 
-test_that("cryptfile is readable by mc_decrypt", {
+test_that("cryptfile is readable by decrypt", {
   tmp <- tempfile()
   dat <- as.raw(1:16)
 
   
   writeBin(dat, cryptfile(tmp, "my secret"))
   # readBin(tmp, raw(), 100)
-  # mc_encrypt(dat, "my secret")
+  # encrypt(dat, "my secret")
   # readBin(cryptfile(tmp, "my secret"), raw(), 20)
 
   tst <- readBin(tmp, raw(), 100)
-  tst <- mc_decrypt(tst, "my secret")
+  tst <- decrypt(tst, "my secret")
   expect_identical(tst, dat)
 })
 
 
-test_that("mc_encrypt output is readable by cryptfile", {
+test_that("encrypt output is readable by cryptfile", {
   tmp <- tempfile()
   dat <- as.raw(1:16)
   
-  enc <- mc_encrypt(dat, "my secret")
+  enc <- encrypt(dat, "my secret")
   writeBin(enc, tmp)
   # readBin(tmp, raw(), 100)
-  # mc_encrypt(dat, "my secret")
+  # encrypt(dat, "my secret")
   # readBin(cryptfile(tmp, "my secret"), raw(), 20)
   
   tst <- readBin(cryptfile(tmp, "my secret"), raw(), 100)
@@ -59,7 +59,7 @@ test_that("cryptfile works at multiple sizes", {
     
     
     tst <- readBin(tmp, raw(), N*2)
-    tst <- mc_decrypt(tst, key)
+    tst <- decrypt(tst, key)
     expect_identical(tst, ref, label = sprintf("[cryptfile test size (manual decryupt) = %i]", N))
   }
 })
@@ -89,7 +89,7 @@ test_that("cryptfile doubler works at multiple sizes", {
     
     # decrypt stream reader
     tst <- readBin(tmp, raw(), N*4)
-    tst <- mc_decrypt(tst, key)
+    tst <- decrypt(tst, key)
     expect_identical(tst, c(ref, ref), label = sprintf("[cryptfile doubler test size (manual decryupt) = %i]", N))
   }
 })
@@ -115,7 +115,7 @@ test_that("cryptfile text works at multiple sizes", {
     
     # decrypt stream reader
     tst <- readBin(tmp, raw(), file.size(tmp))
-    tst <- mc_decrypt(tst, key) |> rawToChar()
+    tst <- decrypt(tst, key) |> rawToChar()
     expect_identical(tst, paste(c(ref, ''), collapse = "\n"), label = sprintf("[cryptfile doubler test size (manual decryupt) = %i]", N))
   }
 })

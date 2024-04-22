@@ -36,7 +36,7 @@
 // @param additional_data_ data used for message authentication, but not
 //        encrypted or included with encrypted output
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP mc_encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
+SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Key
@@ -95,7 +95,7 @@ SEXP mc_encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
       ad = RAW(additional_data_);
       ad_len = (size_t)xlength(additional_data_); 
     } else {
-      error("mc_encrypt_(): 'additional_data' cannot be empty raw vector");
+      error("encrypt_(): 'additional_data' cannot be empty raw vector");
     }
   } else if (TYPEOF(additional_data_) == STRSXP) {
     const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
@@ -103,10 +103,10 @@ SEXP mc_encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
       ad = (uint8_t *)ad_string;
       ad_len = strlen(ad_string);
     } else {
-      error("mc_encrypt_(): 'additional_data' cannot be empty string");
+      error("encrypt_(): 'additional_data' cannot be empty string");
     }
   } else {
-    error("mc_encrypt_(): 'additional_data' must be raw vector or string.");
+    error("encrypt_(): 'additional_data' must be raw vector or string.");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,7 +158,7 @@ SEXP mc_encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
 // @param additional_data_ data used for message authentication, but not
 //        encrypted or included with encrypted output
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
+SEXP decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // return type is 'string' or 'raw'?
@@ -182,7 +182,7 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t *plaintext = (uint8_t *)calloc(ntotal, 1);
   if (plaintext == NULL) {
-    error("mc_decrypt_(): Couldn't malloc output buffer");
+    error("decrypt_(): Couldn't malloc output buffer");
   }
   size_t plaintext_pos = 0;
   size_t plaintext_size = ntotal;
@@ -219,7 +219,7 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
       ad = RAW(additional_data_);
       ad_len = (size_t)xlength(additional_data_); 
     } else {
-      error("mc_decrypt_(): 'additional_data' cannot be empty raw vector");
+      error("decrypt_(): 'additional_data' cannot be empty raw vector");
     }
   } else if (TYPEOF(additional_data_) == STRSXP) {
     const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
@@ -227,10 +227,10 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
       ad = (uint8_t *)ad_string;
       ad_len = strlen(ad_string);
     } else {
-      error("mc_decrypt_(): 'additional_data' cannot be empty string");
+      error("decrypt_(): 'additional_data' cannot be empty string");
     }
   } else {
-    error("mc_decrypt_(): 'additional_data' must be raw vector or string.");
+    error("decrypt_(): 'additional_data' must be raw vector or string.");
   }
   
   
@@ -262,7 +262,7 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
     // This could happen if the 'payload_size' field is corrupted
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (pos + payload_size > ntotal) {
-      error("mc_decrypt_(): Corrupt data? Recorded payload size exceeds data length: %zu + %zu > %zu", pos, payload_size, ntotal);
+      error("decrypt_(): Corrupt data? Recorded payload size exceeds data length: %zu + %zu > %zu", pos, payload_size, ntotal);
     }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -271,7 +271,7 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
     // full length of the input data, and therefore should never overflow.
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (plaintext_pos + payload_size > plaintext_size) {
-      error("mc_decrypt_(): Attempt to write plaintext past end of buffer: %zu + %zu > %zu", plaintext_pos, payload_size, plaintext_size);
+      error("decrypt_(): Attempt to write plaintext past end of buffer: %zu + %zu > %zu", plaintext_pos, payload_size, plaintext_size);
     }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -301,7 +301,7 @@ SEXP mc_decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_) {
     if (res < 0) {
       crypto_wipe(&ctx, sizeof(ctx));
       free(plaintext);
-      error("mc_decrypt_(): Decryption failed\n");
+      error("decrypt_(): Decryption failed\n");
       return R_NilValue;
     } 
     

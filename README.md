@@ -28,14 +28,16 @@ The key features are:
   - This connection automatically encrypts/decrypts data to file and can
     be used in any function which supports connections e.g. `saveRDS()`,
     `write.csv()`, `png::writePNG()` etc
-- `mc_encrypt()` and `mc_decrypt()` are for encrypting and decrypting
-  raw vectors and strings
+- `encrypt()` and `decrypt()` are for encrypting and decrypting raw
+  vectors and strings
 - `argon2()` derives random bytes (e.g. a `key`) from a pass-phrase
+- `create_public_key()` and `create_shared_key()` can be used to perform
+  key exchange over an insecure channel (i.e. Public Key Cryptography)
 - `isaac()` is a cryptographic RNG for generating random bytes
 
 ## Installation
 
-You can install the development version of rmonocypher from
+You can install the development version of `rmonocypher` from
 [GitHub](https://github.com/coolbutuseless/rmonocypher) with:
 
 ``` r
@@ -46,7 +48,7 @@ devtools::install_github("coolbutuseless/rmonocypher")
 # Using the `cryptfile()` connection
 
 Any function which supports reading/writing with a connection, now
-supports automatic encryption/decrytion using the `cryptfile()`
+supports automatic encryption/decryption using the `cryptfile()`
 connection in this package.
 
 Many R functions support connections e.g. `read.csv()`, `saveRDS()`,
@@ -119,7 +121,7 @@ cat(data, cryptfile(path, key))
 
 # Simple encrypt/decrypt of raw data and strings
 
-`mc_encrypt()` and `mc_decrypt()` are functions for directly encrypting
+`encrypt()` and `decrypt()` are functions for directly encrypting
 strings and raw vectors
 
 ``` r
@@ -129,7 +131,7 @@ library(rmonocypher)
 dat <- "Hello #RStats"
 
 # Encrypt 
-enc <- mc_encrypt(dat, key = "my secret")
+enc <- encrypt(dat, key = "my secret")
 
 # the encrypted data
 enc
@@ -141,7 +143,7 @@ enc
 
 ``` r
 # Decrypt using the same key
-mc_decrypt(enc, key = "my secret", type = 'string')
+decrypt(enc, key = "my secret", type = 'string')
 ```
 
     #> [1] "Hello #RStats"
@@ -195,40 +197,35 @@ of `salt`.
 argon2("my secret")
 ```
 
-    #>  [1] bd 75 49 be f4 10 0b 88 8c 47 e4 21 b0 3c 52 fe e5 8b 28 5f cc 40 df a4 c0
-    #> [26] 50 26 89 c4 ed 16 d0
+    #> [1] "bd7549bef4100b888c47e421b03c52fee58b285fcc40dfa4c0502689c4ed16d0"
 
 ``` r
 # Use text as the salt
 argon2("my secret", salt = "salt and vinegar")
 ```
 
-    #>  [1] 16 df 28 56 ba 2e cc 02 0f f5 06 83 1a 69 1b 1d 92 61 69 48 19 7f b7 4f a6
-    #> [26] 51 bf c8 9c ad 65 e4
+    #> [1] "16df2856ba2ecc020ff506831a691b1d92616948197fb74fa651bfc89cad65e4"
 
 ``` r
 # Use a 32-character hexadecimal string as the salt
 argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
 ```
 
-    #>  [1] 22 16 b7 00 af 05 98 4f 21 d7 46 54 87 f2 1d e0 09 6f 7a aa 16 4d 2b 56 c5
-    #> [26] 48 03 e3 89 1e c0 71
+    #> [1] "2216b700af05984f21d7465487f21de0096f7aaa164d2b56c54803e3891ec071"
 
 ``` r
 # Use random bytes for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 ```
 
-    #>  [1] 36 8d 46 13 99 6f 6d 90 83 52 4b fa cf 97 21 17 fc 40 95 34 61 a2 48 b9 c5
-    #> [26] 40 6a ee b7 b3 c9 3e
+    #> [1] "368d4613996f6d9083524bfacf972117fc40953461a248b9c5406aeeb7b3c93e"
 
 ``` r
 # Use 'isaac()' to source random bytes for the salt
 argon2("my secret", salt = isaac(16))
 ```
 
-    #>  [1] 44 2a 80 ec 73 5d 10 43 fc 22 32 2e 28 e8 7f 0c e9 08 89 0e 1b 39 f0 3b 2b
-    #> [26] d6 66 98 31 a4 30 25
+    #> [1] "442a80ec735d1043fc22322e28e87f0ce908890e1b39f03b2bd6669831a43025"
 
 # Additional data
 
@@ -267,7 +264,7 @@ address on the envelope is used as the *additional data*.
 key      <- argon2("my secret key2")
 message  <- 'Meet me in St Louis'
 address  <- 'To: Judy'
-enc      <- mc_encrypt(message, key, additional_data = address)
+enc      <- encrypt(message, key, additional_data = address)
 
 # Package the additional data and deliver to recipient
 letter <- list(address = address, message = enc)
@@ -285,7 +282,7 @@ letter
 ``` r
 # Recipient decodes message. 
 # If envelope or contents are tampered with, message decryption will fail.
-mc_decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
     #> [1] "Meet me in St Louis"
@@ -296,10 +293,10 @@ being sent to “Sandra”, then decryption will fail:
 
 ``` r
 letter$address <- "To: Sandra"
-mc_decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
-    #> Error in mc_decrypt(letter$message, key = key, type = "string", additional_data = letter$address): mc_decrypt_(): Decryption failed
+    #> Error in decrypt(letter$message, key = key, type = "string", additional_data = letter$address): decrypt_(): Decryption failed
 
 # Technical Notes
 

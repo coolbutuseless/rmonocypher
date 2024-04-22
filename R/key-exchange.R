@@ -1,42 +1,37 @@
 
 
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' Create a public key from your secret key for public key cryptography.
+#' Derive a shared key using public keys shared over insecure connections 
 #' 
-#' Use your secret key and public key with \code{create_shared_key()} to 
-#' exchange keys over an insecure channel (i.e. public-key cryptography)
+#' These functions implement public-key cryptography using x25519. 
+#' X25519 is an elliptic curve Diffie-Hellman key exchange using Curve25519. 
+#' It allows two parties to jointly agree on a shared secret using an insecure channel.
+#' 
+#' @section Technial Note:
+#' The derived \code{shared secret} is \emph{not} returned to the user. Instead,
+#' the \code{shared secret} is combined with the two public keys and hashed
+#' with the \code{Blake2b} hash.  32 bytes of this hash are returned to the
+#' user as the \code{shared key} to be used for encryption.
+#' This follows the example set out in \url{https://monocypher.org/manual/x25519}.
+#' 
+#' The justification from the 'monocypher' documentation: 
+#' "many key pairs produce the same shared secret. 
+#' Therefore, not including the public keys in the key derivation can lead to subtle 
+#' vulnerabilities. This can be avoided by hashing the shared secret 
+#' concatenated with both public keys"
 #' 
 #' @inheritParams argon2
 #' @param your_secret_key Your secret key. Can be a character string, a 32-byte raw vector
 #'        or a 64-character hex string (encoding 32 bytes). When a shorter character string 
 #'        is given, a 32-byte key is derived using the Argon2 algorithm.
-#' 
-#' @return 32-byte public key
-#' 
-#' @export
-#' @examples
-#' your_secret_key <- argon2('hello')
-#' create_public_key(your_secret_key)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-create_public_key <- function(your_secret_key, type = 'string') {
-  .Call(create_public_key_, your_secret_key, type)
-}
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' Key exchange over an insecure channel.
-#' 
-#' This function implements public-key cryptography using x25519. 
-#' X25519 is an elliptic curve Diffie-Hellman key exchange using Curve25519. 
-#' It allows two parties to jointly agree on a shared secret using an insecure channel.
-#' 
-#' @inheritParams create_public_key
 #' @param their_public_key Other party's secret key. Can be a character string, a 32-byte raw vector
 #'        or a 64-character hex string (encoding 32 bytes). When a shorter character string 
 #'        is given, a 32-byte key is derived using the Argon2 algorithm.
 #' 
-#' @return A shared encryption key to use with \code{mc_encrypt()} and
+#' @return \code{create_public_key()} returns a public key from a secret key.
+#'         \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt()} and
 #'         \code{cryptfile()}
 #' 
 #' @export
@@ -66,6 +61,17 @@ create_public_key <- function(your_secret_key, type = 'string') {
 create_shared_key <- function(their_public_key, your_secret_key, type = 'string') {
   .Call(create_shared_key_, their_public_key, your_secret_key, type)
 }
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' @rdname create_shared_key
+#' @export
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+create_public_key <- function(your_secret_key, type = 'string') {
+  .Call(create_public_key_, your_secret_key, type)
+}
+
 
 
 if (FALSE) {

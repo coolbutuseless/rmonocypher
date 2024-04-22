@@ -2,9 +2,12 @@
 % Please edit documentation in R/key-exchange.R
 \name{create_shared_key}
 \alias{create_shared_key}
-\title{Key exchange over an insecure channel.}
+\alias{create_public_key}
+\title{Derive a shared key using public keys shared over insecure connections}
 \usage{
 create_shared_key(their_public_key, your_secret_key, type = "string")
+
+create_public_key(your_secret_key, type = "string")
 }
 \arguments{
 \item{their_public_key}{Other party's secret key. Can be a character string, a 32-byte raw vector
@@ -19,14 +22,30 @@ is given, a 32-byte key is derived using the Argon2 algorithm.}
 Possible values 'string' or 'raw'}
 }
 \value{
-A shared encryption key to use with \code{mc_encrypt()} and
+\code{create_public_key()} returns a public key from a secret key.
+        \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt()} and
         \code{cryptfile()}
 }
 \description{
-This function implements public-key cryptography using x25519. 
+These functions implement public-key cryptography using x25519. 
 X25519 is an elliptic curve Diffie-Hellman key exchange using Curve25519. 
 It allows two parties to jointly agree on a shared secret using an insecure channel.
 }
+\section{Technial Note}{
+
+The derived \code{shared secret} is \emph{not} returned to the user. Instead,
+the \code{shared secret} is combined with the two public keys and hashed
+with the \code{Blake2b} hash.  32 bytes of this hash are returned to the
+user as the \code{shared key} to be used for encryption.
+This follows the example set out in \url{https://monocypher.org/manual/x25519}.
+
+The justification from the 'monocypher' documentation: 
+"many key pairs produce the same shared secret. 
+Therefore, not including the public keys in the key derivation can lead to subtle 
+vulnerabilities. This can be avoided by hashing the shared secret 
+concatenated with both public keys"
+}
+
 \examples{
 # The following example shows how a common encryption key may 
 # be derived by two parties without disclosing any secret

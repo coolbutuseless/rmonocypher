@@ -64,9 +64,9 @@ This connection works with both ASCII and binary data, e.g. using
 }
 \section{Technical Notes}{
 
-
-The connection uses 'monochyper' functions for Authenticated Encryption
-which implement RFC 8439. 
+The encryption functions in this package implement RFC 8439 ChaCha20-Poly1305
+authenticated encryption with additional data. This algorithm combines
+the ChaCha20 stream cipher with the Poly1305 message authentication code.
 
 To avoid file I/O overhead, multiple sequential writes are buffered, and 
 encrypted data is split into frames using

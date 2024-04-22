@@ -5,14 +5,14 @@ test_that("encrypt additional data works", {
   key      <- argon2("my secret key", isaac(16))
   message  <- 'Meet me in St Louis'
   envelope <- 'To: Judy'
-  enc      <- mc_encrypt(message, key, additional_data = envelope)
+  enc      <- encrypt(message, key, additional_data = envelope)
   
   # Package the additional data and deliver to recipient
   letter <- list(envelope = envelope, contents = enc)
   
   # Recipient decodes message. If envelope or contents change, message decryption
   # will fail.
-  tst <- mc_decrypt(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
+  tst <- decrypt(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
   expect_identical(message, tst)
   
   
@@ -25,18 +25,18 @@ test_that("encrypt additional data works", {
   testthat::skip_on_cran()
   # Bad key
   expect_error(
-    tst <- mc_decrypt(letter$contents, key = "wrong", type = 'string', additional_data = letter$envelope)
+    tst <- decrypt(letter$contents, key = "wrong", type = 'string', additional_data = letter$envelope)
   )
   
   # Missing additional data
   expect_error(
-    tst <- mc_decrypt(letter$contents, key = key, type = 'string', additional_data = NULL)
+    tst <- decrypt(letter$contents, key = key, type = 'string', additional_data = NULL)
   )
   
   # altered additional data
   letter$envelope <- "To: Neo"
   expect_error(
-    tst <- mc_decrypt(letter$contents, key = key, type = 'string', additional_data = NULL)
+    tst <- decrypt(letter$contents, key = key, type = 'string', additional_data = NULL)
   )
 })
 

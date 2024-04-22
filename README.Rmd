@@ -48,15 +48,16 @@ The key features are:
     * This connection automatically encrypts/decrypts data to file and can be used in any 
       function which supports connections 
       e.g. `saveRDS()`, `write.csv()`, `png::writePNG()` etc
-* `mc_encrypt()` and `mc_decrypt()` are for encrypting and decrypting raw vectors
+* `encrypt()` and `decrypt()` are for encrypting and decrypting raw vectors
   and strings
 * `argon2()` derives random bytes (e.g. a `key`) from a pass-phrase
+* `create_public_key()` and `create_shared_key()` can be used to perform key 
+  exchange over an insecure channel (i.e. Public Key Cryptography)
 * `isaac()` is a cryptographic RNG for generating random bytes
-
 
 ## Installation
 
-You can install the development version of rmonocypher from [GitHub](https://github.com/coolbutuseless/rmonocypher) with:
+You can install the development version of `rmonocypher` from [GitHub](https://github.com/coolbutuseless/rmonocypher) with:
 
 ``` r
 # install.packages("devtools")
@@ -127,7 +128,7 @@ cat(data, cryptfile(path, key))
 
 # Simple encrypt/decrypt of raw data and strings
 
-`mc_encrypt()` and `mc_decrypt()` are functions for directly encrypting 
+`encrypt()` and `decrypt()` are functions for directly encrypting 
 strings and raw vectors
 
 ```{r}
@@ -137,13 +138,13 @@ library(rmonocypher)
 dat <- "Hello #RStats"
 
 # Encrypt 
-enc <- mc_encrypt(dat, key = "my secret")
+enc <- encrypt(dat, key = "my secret")
 
 # the encrypted data
 enc
 
 # Decrypt using the same key
-mc_decrypt(enc, key = "my secret", type = 'string')
+decrypt(enc, key = "my secret", type = 'string')
 ```
 
 # Encryption keys
@@ -247,7 +248,7 @@ on the envelope is used as the *additional data*.
 key      <- argon2("my secret key2")
 message  <- 'Meet me in St Louis'
 address  <- 'To: Judy'
-enc      <- mc_encrypt(message, key, additional_data = address)
+enc      <- encrypt(message, key, additional_data = address)
 
 # Package the additional data and deliver to recipient
 letter <- list(address = address, message = enc)
@@ -255,7 +256,7 @@ letter
 
 # Recipient decodes message. 
 # If envelope or contents are tampered with, message decryption will fail.
-mc_decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
 If a malicious third-party tampers with the address, then the message cannot
@@ -264,7 +265,7 @@ to "Sandra", then decryption will fail:
 
 ```{r error = TRUE}
 letter$address <- "To: Sandra"
-mc_decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
 
