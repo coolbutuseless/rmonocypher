@@ -328,8 +328,7 @@ enc      <- encrypt(message, key, additional_data = address)
 letter <- list(address = address, message = enc)
 letter
 
-# Recipient decodes message. 
-# If envelope or contents are tampered with, message decryption will fail.
+# Recipient decodes message, and the 'address' forms part of the decryption.
 decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
@@ -347,9 +346,9 @@ decrypt(letter$message, key = key, type = 'string', additional_data = letter$add
 
 # Technical Notes
 
-* The nonce used within 'monocypher' is 24-bytes and is large enough that 
-  counter/ratcheting mechanisms do not need to be used to uniqueness - 24 random
-  bytes (192 bits) of randomness is sufficient that nonce reuse is not an issue.
+* The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
+  counter/ratcheting mechanisms do not need to be used, and random bytes are 
+  unlikely to generate the same nonce twice in any reasonable timeframe.
 * The nonce is created internally using random bytes from the ISAAC random number
   generator.  
 * There are no magic bytes pre-pended to the data to identify it as encrypted, 
