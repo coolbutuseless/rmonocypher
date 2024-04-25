@@ -13,7 +13,7 @@ cryptfile(
 )
 }
 \arguments{
-\item{description}{path for encrypted file}
+\item{description}{path for encrypted file or a connection to read/write to}
 
 \item{key}{The encryption key. Can be a character string, a 32-byte raw vector
 or a 64-character hex string (encoding 32 bytes). When a shorter character string 
