@@ -164,9 +164,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] 36 92 8c 01 f2 89 c1 fe 2f 63 c1 55 50 d3 37 1f 03 0a 92 c9 a7 44 e1 57 0d
-    #> [26] 00 00 00 00 00 00 00 b2 22 2a 37 9f 65 4f ee fa 26 44 6e cd c3 c5 25 6c eb
-    #> [51] 56 61 62 99 0f 68 f3 e0 06 ff ae
+    #>  [1] fc ad 34 72 9b fc cc ff ab 18 67 38 b5 ec bc 92 38 70 2b 0f b7 7e a8 2e 0d
+    #> [26] 00 00 00 00 00 00 00 3a 5e 52 56 7d 2f 16 3a 26 96 8b 49 31 94 20 c8 5d c8
+    #> [51] c0 5b 94 13 78 ee d8 c5 76 c4 76
 
 ``` r
 # Decrypt using the same key
@@ -258,7 +258,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "e27a72d60b58c882d1e93878de36833b86d1effd8512d280524d88052c69aba5"
+    #> [1] "380c9507ef1b9faf4f71270882a14dfdf0519a7065c67449b73edd3c112c80c8"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -355,9 +355,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] db cf 54 51 4e 9a cf 13 2e c5 26 a2 e0 20 12 ad 3c 20 c6 65 8c 61 c1 a7 13
-    #> [26] 00 00 00 00 00 00 00 fe 00 22 e5 ef 24 ab 2c c6 1f 13 5b dd a3 48 a5 8c 3e
-    #> [51] d3 98 cf 2d ff 4d 60 64 63 e9 ba ce 8c ef cc dd 31
+    #>  [1] 98 d1 3a 04 55 57 f5 a1 72 ad df fd 7f ea c5 36 9b a6 89 08 fb 69 a9 0f 13
+    #> [26] 00 00 00 00 00 00 00 fd 34 79 6b a7 f6 51 2c 9f da cf 8b fb b3 61 7c 98 bf
+    #> [51] 70 f9 09 bd c4 51 e7 95 05 63 ba 17 d7 c9 1d 1d 48
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.

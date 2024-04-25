@@ -39,11 +39,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 typedef struct {
   crypto_aead_ctx ctx;
-  
-  int is_file;
   FILE *fp; 
-  Rconnection inner;
-  
   int verbosity;
   
   uint8_t key[KEYSIZE];
@@ -85,21 +81,16 @@ int decrypt_frame(cryptfile_state *cstate) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Check for end-of-file
-  //   This may not trigger until a read is attmpted further below
+  //   This may not trigger until 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if ((cstate->is_file && feof(cstate->fp)) || (!cstate->is_file && cstate->inner->EOF_signalled)) {
+  if (feof(cstate->fp)) {
     return 0;
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Read Frame Header:  payload size + mac
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  unsigned long bytes_read; 
-  if (cstate->is_file) {
-    bytes_read = fread(&cstate->payload_size, 1, LENGTHSIZE, cstate->fp);
-  } else {
-    bytes_read = R_ReadConnection(cstate->inner, &cstate->payload_size, LENGTHSIZE);
-  }
+  unsigned long bytes_read = fread(&cstate->payload_size, 1, LENGTHSIZE, cstate->fp);
   if (bytes_read == 0) {
     return 0; // EOF
   }
@@ -108,11 +99,7 @@ int decrypt_frame(cryptfile_state *cstate) {
     error("decrypt_frame_(): Rrror reading payload size (EOF: %i) %lu/%zu", feof(cstate->fp), bytes_read, LENGTHSIZE); 
   }
   
-  if (cstate->is_file) {
-    bytes_read = fread(cstate->mac, 1, MACSIZE, cstate->fp);
-  } else {
-    bytes_read = R_ReadConnection(cstate->inner, cstate->mac, MACSIZE);
-  }
+  bytes_read = fread(cstate->mac, 1, MACSIZE, cstate->fp);
   if (bytes_read != MACSIZE) { 
     error("decrypt_frame_(): Error reading MAC"); 
   }
@@ -124,12 +111,7 @@ int decrypt_frame(cryptfile_state *cstate) {
     cstate->bufsize = 2 * cstate->payload_size;
     cstate->buf = (uint8_t *)realloc(cstate->buf, cstate->bufsize);
   }
-  
-  if (cstate->is_file) {
-    bytes_read = fread(cstate->buf, 1, cstate->payload_size, cstate->fp);
-  } else {
-    bytes_read = R_ReadConnection(cstate->inner, cstate->buf, cstate->payload_size);
-  }
+  bytes_read = fread(cstate->buf, 1, cstate->payload_size, cstate->fp);
   if (bytes_read != cstate->payload_size) { 
     error("cryptfile_open(): Error reading payload %lu/%zu", bytes_read, cstate->payload_size); 
   }
@@ -251,25 +233,13 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
     // Initialize 'cstate' for decryption
     //   open file in 'read' mode
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (cstate->is_file) {
-      cstate->fp = fopen(rconn->description, "rb");
-      if (cstate->fp == NULL) error("cryptfile_open_(): Couldn't open file '%s'", rconn->description);
-    } else {
-      strcpy(cstate->inner->mode, "rb");
-      int res = cstate->inner->open(cstate->inner);
-      if (!res) {
-        error("cryptfile_open(): Couldn't open inner connection for reading");
-      }
-    }
+    cstate->fp = fopen(rconn->description, "rb");
+    if (cstate->fp == NULL) error("cryptfile_open_(): Couldn't open file '%s'", rconn->description);
+
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Read Nonce from first bytes of file
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    unsigned long bytes_read;
-    if (cstate->is_file) {
-      bytes_read = fread(cstate->nonce, 1, NONCESIZE, cstate->fp);
-    } else {
-      bytes_read = R_ReadConnection(cstate->inner, cstate->nonce, NONCESIZE);
-    }
+    unsigned long bytes_read = fread(cstate->nonce, 1, NONCESIZE, cstate->fp);
     if (bytes_read != NONCESIZE) { error("cryptfile_open_(): error reading nonce"); }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,17 +259,9 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
     // Initialize 'cstate' for encryption
     //   open file in 'write' mode
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (cstate->is_file) {
-      cstate->fp = fopen(rconn->description, "wb");
-      if (cstate->fp == NULL) {
-        error("cryptfile_open_(): Couldn't open input file '%s' with mode '%s'", rconn->description, rconn->mode);
-      }
-    } else {
-      strcpy(cstate->inner->mode, "wb");
-      int res = cstate->inner->open(cstate->inner);
-      if (!res) {
-        error("cryptfile_open(): Couldn't open inner connection for writing");
-      }
+    cstate->fp = fopen(rconn->description, "wb");
+    if (cstate->fp == NULL) {
+      error("cryptfile_open_(): Couldn't open input file '%s' with mode '%s'", rconn->description, rconn->mode);
     }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -311,11 +273,8 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
     // Select a random nonce and write to file
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     rcrypto(cstate->nonce, NONCESIZE);
-    if (cstate->is_file) {
-      fwrite(cstate->nonce, 1, NONCESIZE, cstate->fp);
-    } else {
-      R_WriteConnection(cstate->inner, cstate->nonce, NONCESIZE);
-    }  
+    fwrite(cstate->nonce, 1, NONCESIZE, cstate->fp);
+    
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Initialize context
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,18 +344,15 @@ void encrypt_frame(uint8_t *ciphertext, uint8_t *plaintext, size_t payload_size,
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Write frameheader
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  size_t bytes_written = 0;
-  if (cstate->is_file) {
-    bytes_written += fwrite(&payload_size, 1, LENGTHSIZE, cstate->fp);
-    bytes_written += fwrite(cstate->mac  , 1,    MACSIZE, cstate->fp);
-    bytes_written += (size_t)fwrite(ciphertext, 1, payload_size, cstate->fp);
-  } else {
-    bytes_written += R_WriteConnection(cstate->inner, &payload_size, LENGTHSIZE);
-    bytes_written += R_WriteConnection(cstate->inner, cstate->mac  , MACSIZE);
-    bytes_written += R_WriteConnection(cstate->inner, ciphertext, payload_size);
-  }
-  if (bytes_written != LENGTHSIZE + MACSIZE + payload_size) {
-    error("encrypt_frame_(): Write error - only wrote %zu/%zu bytes\n", bytes_written, LENGTHSIZE + MACSIZE + payload_size);
+  fwrite(&payload_size, 1, LENGTHSIZE, cstate->fp);
+  fwrite(cstate->mac  , 1,    MACSIZE, cstate->fp);
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Write payload
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  size_t n = (size_t)fwrite(ciphertext, 1, payload_size, cstate->fp);
+  if (n != payload_size) {
+    error("encrypt_frame_(): Write error - only wrote %zu/%zu bytes\n", n, payload_size);
   }
 }
 
@@ -425,11 +381,9 @@ void cryptfile_close(struct Rconn *rconn) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Close the file
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if (cstate->is_file && cstate->fp) {
+  if (cstate->fp) {
     fclose(cstate->fp);
     cstate->fp = NULL;  
-  } else if (!cstate->is_file) {
-    cstate->inner->close(cstate->inner);
   }
 }
 
@@ -729,25 +683,7 @@ SEXP cryptfile_(SEXP description_, SEXP key_, SEXP mode_,
   // Create and Initialize User State
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   cryptfile_state *cstate = (cryptfile_state *)calloc(1, sizeof(cryptfile_state));
-  if (cstate == NULL) {
-    error("cryptfile_(): Couldn't allocate private data");
-  }
   cstate->verbosity = asInteger(verbosity_);
-  
-  
-  char *description;
-  if (TYPEOF(description_) == STRSXP) {
-    cstate->is_file = 1;
-    description = (char *)CHAR(STRING_ELT(description_, 0));
-  } else {
-    cstate->is_file = 0;
-    cstate->inner = R_GetConnection(description_);
-    description = "cryptfile(connection)";
-    if (cstate->inner->isopen) {
-      error("cryptfile_(): Inner connection must not already be opened");
-    }
-  }
-  
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Unpack the key into canonical 32-bytes uint8_t data
@@ -791,7 +727,7 @@ SEXP cryptfile_(SEXP description_, SEXP key_, SEXP mode_,
   // I think it takes responsibility for freeing it later.
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Rconnection con = NULL;
-  SEXP rc = PROTECT(R_new_custom_connection(description, "rb", "cryptfile", &con));
+  SEXP rc = PROTECT(R_new_custom_connection(CHAR(STRING_ELT(description_, 0)), "rb", "cryptfile", &con));
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // text       - true if connection operates on text
