@@ -47,7 +47,9 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
 - `argon2()` derives encryption keys from pass-phrases
 - `create_public_key()` and `create_shared_key()` can be used to perform
   key exchange over an insecure channel (i.e. Public Key Cryptography)
-- `isaac()` is a cryptographic RNG for generating random bytes
+- `rcrypto()` is a cryptographic RNG for generating random bytes using
+  the operating systems cryptographically secure pseudorandom number
+  generator.
 
 ## \`monocypher’
 
@@ -162,9 +164,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] 3e 46 2e dd 33 25 74 8b a4 a0 e3 a9 95 a7 78 f9 20 f8 fb 89 3b 29 60 68 0d
-    #> [26] 00 00 00 00 00 00 00 cb d1 79 45 b7 54 0e 4f 2a 55 68 09 6b ef b7 58 c3 9d
-    #> [51] 9d 22 dd 4e ba 00 ee 7a f7 a0 a3
+    #>  [1] fc ad 34 72 9b fc cc ff ab 18 67 38 b5 ec bc 92 38 70 2b 0f b7 7e a8 2e 0d
+    #> [26] 00 00 00 00 00 00 00 3a 5e 52 56 7d 2f 16 3a 26 96 8b 49 31 94 20 c8 5d c8
+    #> [51] c0 5b 94 13 78 ee d8 c5 76 c4 76
 
 ``` r
 # Decrypt using the same key
@@ -200,8 +202,8 @@ current session using `options(MONOCYPHER_KEY = "...")`
 # Random raw bytes
 key <- as.raw(sample(0:255, 32, TRUE))
 
-# Random raw bytes from isaac()
-key <- isaac(32)
+# Random raw bytes from rcrypto()
+key <- rcrypto(32)
 
 # 64-character hexadecimal string
 key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
@@ -252,11 +254,11 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
     #> [1] "368d4613996f6d9083524bfacf972117fc40953461a248b9c5406aeeb7b3c93e"
 
 ``` r
-# Use 'isaac()' to source 16 random bytes for the salt
-argon2("my secret", salt = isaac(16))
+# Use 'rcrypto()' to source 16 random bytes for the salt
+argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "442a80ec735d1043fc22322e28e87f0ce908890e1b39f03b2bd6669831a43025"
+    #> [1] "380c9507ef1b9faf4f71270882a14dfdf0519a7065c67449b73edd3c112c80c8"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -353,9 +355,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] 74 a1 d9 df 1b 7b bc 13 f6 e6 17 86 fc 9e 6b e9 12 73 c1 61 45 08 a1 b7 13
-    #> [26] 00 00 00 00 00 00 00 27 d6 c0 15 6d 69 fd 62 e0 8f 65 77 d5 0a 47 05 49 c8
-    #> [51] be 79 52 b9 6d ae b8 d4 24 52 e5 87 e0 ee 19 7a 83
+    #>  [1] 98 d1 3a 04 55 57 f5 a1 72 ad df fd 7f ea c5 36 9b a6 89 08 fb 69 a9 0f 13
+    #> [26] 00 00 00 00 00 00 00 fd 34 79 6b a7 f6 51 2c 9f da cf 8b fb b3 61 7c 98 bf
+    #> [51] 70 f9 09 bd c4 51 e7 95 05 63 ba 17 d7 c9 1d 1d 48
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.
@@ -381,8 +383,9 @@ decrypt(letter$message, key = key, type = 'string', additional_data = letter$add
   large enough that counter/ratcheting mechanisms do not need to be
   used, and random bytes are unlikely to generate the same nonce twice
   in any reasonable timeframe.
-- The nonce is created internally using random bytes from the ISAAC
-  random number generator.  
+- The nonce is created internally using random bytes from the
+  cryptographic random number generator from the system this is running
+  on.
 - There are no magic bytes pre-pended to the data to identify it as
   encrypted, but the `payload size` field in the file structure is
   easily identifiable (see below).
@@ -419,7 +422,3 @@ the beginning of the file.
 This package uses the [monocypher](https://monocypher.org) encryption
 library v4.0.2 to provide ‘authenticated encryption with additional
 data’ (AEAD) and Argon2 password-based key derivation.
-
-The cryptographic RNG is ISAAC. Code is in the public domain, and
-available from the [Bob Jenkins’ (author)
-homepage](https://burtleburtle.net/bob/rand/isaacafa.html).

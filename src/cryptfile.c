@@ -17,7 +17,7 @@
 
 #include "monocypher.h"
 #include "utils.h"
-#include "isaac-r.h"
+#include "rcrypto.h"
 
 
 
@@ -272,7 +272,7 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Select a random nonce and write to file
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    fill_isaac(cstate->nonce, NONCESIZE);
+    rcrypto(cstate->nonce, NONCESIZE);
     fwrite(cstate->nonce, 1, NONCESIZE, cstate->fp);
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

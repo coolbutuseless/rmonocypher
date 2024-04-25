@@ -50,8 +50,8 @@
 #' # Best practice is to use your own random bytes for the salt
 #' argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 #'
-#' #Can also use 'isaac()' to source random bytes
-#' argon2("my secret", salt = isaac(16))
+#' # Can also use 'rcrypto()' to source random bytes
+#' argon2("my secret", salt = rcrypto(16))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 argon2 <- function(passphrase, salt = passphrase, length = 32, type = 'string') {
   .Call(argon2_, passphrase, salt, length, type);

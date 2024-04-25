@@ -66,7 +66,8 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
 * `argon2()` derives encryption keys from pass-phrases
 * `create_public_key()` and `create_shared_key()` can be used to perform key 
   exchange over an insecure channel (i.e. Public Key Cryptography)
-* `isaac()` is a cryptographic RNG for generating random bytes
+* `rcrypto()` is a cryptographic RNG for generating random bytes using the 
+  operating systems cryptographically secure pseudorandom number generator.
 
 ## `monocypher'
 
@@ -198,8 +199,8 @@ globally for the current session using `options(MONOCYPHER_KEY = "...")`
 # Random raw bytes
 key <- as.raw(sample(0:255, 32, TRUE))
 
-# Random raw bytes from isaac()
-key <- isaac(32)
+# Random raw bytes from rcrypto()
+key <- rcrypto(32)
 
 # 64-character hexadecimal string
 key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
@@ -238,8 +239,8 @@ argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
 # Use 16-bytes of random data for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 
-# Use 'isaac()' to source 16 random bytes for the salt
-argon2("my secret", salt = isaac(16))
+# Use 'rcrypto()' to source 16 random bytes for the salt
+argon2("my secret", salt = rcrypto(16))
 ```
 
 
@@ -349,8 +350,8 @@ decrypt(letter$message, key = key, type = 'string', additional_data = letter$add
 * The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
   counter/ratcheting mechanisms do not need to be used, and random bytes are 
   unlikely to generate the same nonce twice in any reasonable timeframe.
-* The nonce is created internally using random bytes from the ISAAC random number
-  generator.  
+* The nonce is created internally using random bytes from the cryptographic random number
+  generator from the system this is running on.
 * There are no magic bytes pre-pended to the data to identify it as encrypted, 
   but the `payload size` field in the file structure is easily identifiable 
   (see below).
@@ -385,7 +386,4 @@ has a header giving the number of encrypted bytes (payload size) and a MAC (Mess
 This package uses the [monocypher](https://monocypher.org) encryption library
 v4.0.2 to provide 'authenticated encryption with additional data' (AEAD) 
 and Argon2 password-based key derivation.
-
-The cryptographic RNG is ISAAC.  Code is in the public domain, and 
-available from the [Bob Jenkins' (author) homepage](https://burtleburtle.net/bob/rand/isaacafa.html).
 

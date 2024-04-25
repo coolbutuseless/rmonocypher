@@ -47,7 +47,7 @@ test_that("cryptfile works", {
 
 test_that("cryptfile works at multiple sizes", {
   tmp <- tempfile()
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   N <- 65537
   
   for (N in 10^(2:7)) {
@@ -69,7 +69,7 @@ test_that("cryptfile works at multiple sizes", {
 
 test_that("cryptfile doubler works at multiple sizes", {
   tmp <- tempfile()
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   N <- 10^2
   
   for (N in 10^(2:6)) {
@@ -100,7 +100,7 @@ test_that("cryptfile doubler works at multiple sizes", {
 
 test_that("cryptfile text works at multiple sizes", {
   tmp <- tempfile()
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   s <- paste(sample(letters, 1000, T), collapse = "")
   N <- 10^1
   
@@ -124,7 +124,7 @@ test_that("cryptfile text works at multiple sizes", {
 test_that("cryptfile serialize works", {
   
   tmp <- tempfile()
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   dat <- mtcars
   saveRDS(dat, cryptfile(tmp, key))
   tst <- readRDS(cryptfile(tmp, key))

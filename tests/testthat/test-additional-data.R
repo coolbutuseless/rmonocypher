@@ -2,7 +2,7 @@
 test_that("encrypt additional data works", {
   
   # Using additional data to encrypt a message
-  key      <- argon2("my secret key", isaac(16))
+  key      <- argon2("my secret key", rcrypto(16))
   message  <- 'Meet me in St Louis'
   envelope <- 'To: Judy'
   enc      <- encrypt(message, key, additional_data = envelope)
@@ -44,7 +44,7 @@ test_that("encrypt additional data works", {
 test_that("cryptfile with additional data works", {
   
   # Using additional data to encrypt a message
-  key      <- argon2("my secret key", isaac(16))
+  key      <- argon2("my secret key", rcrypto(16))
   message  <- 'Meet me in St Louis'
   envelope <- 'To: Judy'
   path     <- tempfile()

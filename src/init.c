@@ -8,7 +8,7 @@ extern SEXP encrypt_(SEXP x_  , SEXP key_,             SEXP additional_data_);
 extern SEXP decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_);
 
 extern SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_, SEXP type_);
-extern SEXP isaac_(SEXP n_, SEXP type_);
+extern SEXP rcrypto_(SEXP n_, SEXP type_);
 
 SEXP create_public_key_(SEXP your_secret_key_, SEXP type_);
 SEXP create_shared_key_(SEXP their_public_key_, SEXP your_secret_key_, SEXP type_);
@@ -24,9 +24,8 @@ static const R_CallMethodDef CEntries[] = {
   {"encrypt_", (DL_FUNC) &encrypt_, 3},
   {"decrypt_", (DL_FUNC) &decrypt_, 4},
   
-  {"argon2_", (DL_FUNC) &argon2_, 4},
-  {"isaac_", (DL_FUNC) &isaac_  , 2},
-  
+  {"rcrypto_", (DL_FUNC) &rcrypto_, 2},
+  {"argon2_"      , (DL_FUNC) &argon2_      , 4},
   
   {"create_public_key_", (DL_FUNC) &create_public_key_  , 2},
   {"create_shared_key_", (DL_FUNC) &create_shared_key_  , 3},

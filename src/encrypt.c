@@ -17,7 +17,7 @@
 #include "monocypher.h"
 #include "utils.h"
 #include "argon2.h"
-#include "isaac-r.h"
+#include "rcrypto.h"
 
 
 #define KEYSIZE   32
@@ -62,7 +62,7 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   // Nonce
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t nonce[NONCESIZE];
-  fill_isaac(nonce, NONCESIZE);
+  rcrypto(nonce, NONCESIZE);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Encryption Context

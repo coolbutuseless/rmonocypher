@@ -3,13 +3,13 @@
 test_that("stream encrypt/decrypt works", {
   
   dat <- as.raw(seq(10000) %% 255)
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   res <- encrypt(dat, key) |> decrypt(key)
   expect_identical(res, dat)
   
   
   dat <- as.raw(seq(1000000) %% 255)
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   res <- encrypt(dat, key) |> decrypt(key)
   expect_identical(res, dat)
   
@@ -19,13 +19,13 @@ test_that("stream encrypt/decrypt works", {
 test_that("stream encrypt/decrypt with textworks", {
   
   dat <- "hello"
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   res <- encrypt(dat, key) |> decrypt(key, type = 'string')
   expect_identical(res, dat)
   
   
   dat <- paste(sample(letters, 100000, T), collapse = "")
-  key <- argon2('my secret', isaac(16))
+  key <- argon2('my secret', rcrypto(16))
   res <- encrypt(dat, key) |> decrypt(key, type = 'string')
   expect_identical(res, dat)
   

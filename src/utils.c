@@ -185,6 +185,7 @@ SEXP wrap_bytes_for_return(uint8_t *buf, size_t N, SEXP type_) {
     char *hex = bytes_to_hex(buf, N);
     res_ = PROTECT(allocVector(STRSXP, 1));
     SET_STRING_ELT(res_, 0, mkChar(hex));
+    free(hex);
   }
   
   UNPROTECT(1);
