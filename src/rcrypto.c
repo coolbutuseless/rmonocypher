@@ -92,7 +92,6 @@ SEXP rcrypto_(SEXP n_, SEXP type_) {
   // Wrap bytes for R and return
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   SEXP res_ = PROTECT(wrap_bytes_for_return((uint8_t *)buf, n, type_));
-  free(buf);
   UNPROTECT(1);
   return res_;
 }
