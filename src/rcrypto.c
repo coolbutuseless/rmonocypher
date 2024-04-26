@@ -80,8 +80,11 @@ void rcrypto(void *buf, size_t n) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP rcrypto_(SEXP n_, SEXP type_) {
   
+  if (asInteger(n_) <= 0) {
+    error("rcrypto_(): 'n' must be a positive integer");
+  }
   size_t n = (size_t)asInteger(n_);
-  void *buf = malloc(n);
+  void *buf = R_alloc(n, 1);
   
   rcrypto(buf, n);
   

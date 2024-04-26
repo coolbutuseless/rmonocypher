@@ -21,6 +21,8 @@ based on the [`monocypher`](https://monocypher.org/) library.
 - Generate encryption keys from easier-to-remember pass-phrases
   - Using [‘Argon2’](https://en.wikipedia.org/wiki/Argon2) for
     password-based key derivation
+- A secure source of random bytes generated from the operating system’s
+  entropy sources
 
 #### Motivating example
 
@@ -164,9 +166,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] 36 92 8c 01 f2 89 c1 fe 2f 63 c1 55 50 d3 37 1f 03 0a 92 c9 a7 44 e1 57 0d
-    #> [26] 00 00 00 00 00 00 00 b2 22 2a 37 9f 65 4f ee fa 26 44 6e cd c3 c5 25 6c eb
-    #> [51] 56 61 62 99 0f 68 f3 e0 06 ff ae
+    #>  [1] a5 fd 20 4d 85 d9 e3 a3 b5 86 3b 9a 87 fb ab ea 75 c0 9e 13 d0 37 1b 7a 0d
+    #> [26] 00 00 00 00 00 00 00 23 5b 5d 0d 55 33 ef 84 18 ac 01 37 9c c6 6a ac b9 a2
+    #> [51] b9 59 e1 cb e1 c2 26 bb fe 6b f0
 
 ``` r
 # Decrypt using the same key
@@ -258,7 +260,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "e27a72d60b58c882d1e93878de36833b86d1effd8512d280524d88052c69aba5"
+    #> [1] "0970afa5910d39f03782fcd3046a63564cbb323ed944851a6280a6813f51db47"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -355,9 +357,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] db cf 54 51 4e 9a cf 13 2e c5 26 a2 e0 20 12 ad 3c 20 c6 65 8c 61 c1 a7 13
-    #> [26] 00 00 00 00 00 00 00 fe 00 22 e5 ef 24 ab 2c c6 1f 13 5b dd a3 48 a5 8c 3e
-    #> [51] d3 98 cf 2d ff 4d 60 64 63 e9 ba ce 8c ef cc dd 31
+    #>  [1] 2f 91 78 cd 38 e3 39 22 b1 fb f8 2f 34 ee f7 8c 8a 1e f2 b7 e7 7f 86 15 13
+    #> [26] 00 00 00 00 00 00 00 b3 70 6e ec 53 75 df 73 c8 d9 25 b9 2c 46 7d 53 f5 e2
+    #> [51] 18 61 0b 50 31 28 8f 4c 78 ff e9 9b be 20 b9 22 e3
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.
