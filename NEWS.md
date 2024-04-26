@@ -1,4 +1,8 @@
 
+# rmonocypher 0.1.3  2024-04-26
+
+* Update `cryptfile()` to read/write with **connections** as well as files.
+
 # rmonocypher 0.1.2  2024-04-25
 
 * Replace the ISAAC CSPRNG with the OS-provided, platform specific CSPRNG
