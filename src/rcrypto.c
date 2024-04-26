@@ -61,7 +61,7 @@ void rcrypto(void *buf, size_t n) {
   // Linux use 'Sys_getrandom()'
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #elif defined(__linux__)
-  size_t status = (size_t)syscall( SYS_getrandom, buf, n, 0 );
+  long status = (long)syscall( SYS_getrandom, buf, n, 0 );
   if (status < 0 || status != n) {
     error("cryptorng_linux() error: Status = %zu.\n", status);
   }

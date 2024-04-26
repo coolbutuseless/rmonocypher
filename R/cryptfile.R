@@ -17,7 +17,7 @@
 #' \code{readLines()} and \code{readBin()}.
 #' 
 #' @inheritParams encrypt
-#' @param description path for encrypted file
+#' @param description path for encrypted file or a connection to read/write to
 #' @param open Character string. A description of how to open the connection if 
 #'        it is to be opened upon creation e.g. "rb". Default "" (empty string) means
 #'        to not open the connection on creation - user must still call \code{open()}.
@@ -80,9 +80,14 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cryptfile <- function(description, key = getOption("MONOCYPHER_KEY", default = NULL),
                       open = "", additional_data = NULL, verbosity = 0) {
+  
+  if (is.character(description)) {
+    description <- normalizePath(description, mustWork = FALSE)
+  }
+  
   .Call(
     cryptfile_, 
-    description     = normalizePath(description, mustWork = FALSE), 
+    description     = description, 
     key             = key,
     open            = open,
     additional_data = additional_data,
