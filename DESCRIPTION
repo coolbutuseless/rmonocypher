@@ -1,17 +1,20 @@
 Package: rmonocypher
 Type: Package
 Title: Connection for Automatic Encryption and Decryption of Data in Files
-Version: 0.1.3
+Version: 0.1.4
 Authors@R: c(
     person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
     person("Loup", "Vaillant", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
     person("Michael", "Savage", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
-    person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library")
+    person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
+    person("Daan", "Sprenkels", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'sss' code")
     )
 Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
 Description: Encrypt and decrypt data automatically through a connection.
     This implementation  R interface to  
     the 'monocypher' 'C' library (available from <https://monocypher.org>).
+    Keys may also be shared secretly among a group using Shamir's Secret
+    Sharing (see <https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing>).
 URL: https://github.com/coolbutuseless/rmonocypher
 BugReports: https://github.com/coolbutuseless/rmonocypher/issues
 License: MIT + file LICENSE
@@ -24,4 +27,6 @@ Depends:
 Copyright: This package includes the 'monocypher' library written by Loup Vaillant,
     Michael Savage and Fabio Scotomi. See file 'inst/LICENSE-monocypher.md' for 
     the license for 'monocypher'.
+    This package includes code written and copyright Daan Sprenkels. See file
+    'inst/LICENSE-sss.md' for the license for this included code.
 Config/testthat/edition: 3

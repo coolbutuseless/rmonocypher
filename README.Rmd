@@ -41,6 +41,7 @@ based on the [`monocypher`](https://monocypher.org/) library.
 * Generate encryption keys from easier-to-remember pass-phrases
     * Using ['Argon2'](https://en.wikipedia.org/wiki/Argon2) for password-based key derivation
 * A secure source of random bytes generated from the operating system's entropy sources
+* Key sharing using *Shamir's Secret Sharing* 
 
 #### Motivating example
 
@@ -69,8 +70,10 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   exchange over an insecure channel (i.e. Public Key Cryptography)
 * `rcrypto()` is a cryptographic RNG for generating random bytes using the 
   operating systems cryptographically secure pseudorandom number generator.
+* `create_keyshares()` and `combine_keyshares()` for distributing key 
+  shares to a group using *Shamir's Secret Sharing* algorithm
 
-## `monocypher'
+## Included Source Code 
 
 
 The package relies on the cryptographic algorithms supplied by [`monocypher`](https://monocypher.org/)
@@ -80,6 +83,9 @@ The package relies on the cryptographic algorithms supplied by [`monocypher`](ht
 * RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
 i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with 
 Poly1305 message authentication code.
+
+Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
+code.
 
 ## Installation
 
@@ -286,6 +292,40 @@ create_shared_key(your_public, their_secret)
 ```
 
 
+## Shamir's Secret Sharing
+
+*Shamir's Secret Sharing* algorithm allows a key to be split into multiple parts (*keyshares*)
+and shared.  When splitting the key, the number (`k`) is specified to indicate how
+many keyshares are required to reconstruct the key.  Any individual *keyshare* cannot reveal the key.  See [wikipedia](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing).
+
+#### Application example (from wikipedia)
+
+    A company needs to secure their vault. If a single person knows the 
+    code to the vault, the code might be lost or unavailable when the 
+    vault needs to be opened. If there are several people who know the 
+    code, they may not trust each other to always act honestly.
+
+    SSS can be used in this situation to generate shares of the vault's code
+    which are distributed to authorized individuals in the company. The 
+    minimum threshold and number of shares given to each individual can be 
+    selected such that the vault is accessible only by (groups of) authorized 
+    individuals. If fewer shares than the threshold are presented, the vault
+    cannot be opened.
+
+    By accident, coercion or as an act of opposition, some individuals might 
+    present incorrect information for their shares. If the total of correct 
+    shares fails to meet the minimum threshold, the vault remains locked.
+    
+    
+```{r}
+orig_key <- "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
+shares <- create_keyshares(orig_key, n = 6, k = 3)
+shares
+# Reassemble original key from any 3 keyshares
+combine_keyshares(shares[c(1, 2, 3)])
+combine_keyshares(shares[c(6, 1, 4)])
+```
+
 
 
 
@@ -388,3 +428,5 @@ This package uses the [monocypher](https://monocypher.org) encryption library
 v4.0.2 to provide 'authenticated encryption with additional data' (AEAD) 
 and Argon2 password-based key derivation.
 
+Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
+code.

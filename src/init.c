@@ -13,6 +13,9 @@ extern SEXP rcrypto_(SEXP n_, SEXP type_);
 SEXP create_public_key_(SEXP your_secret_key_, SEXP type_);
 SEXP create_shared_key_(SEXP their_public_key_, SEXP your_secret_key_, SEXP type_);
 
+SEXP create_keyshares_(SEXP key_, SEXP n_, SEXP k_, SEXP type_);
+SEXP combine_keyshares_(SEXP shares_, SEXP type_);
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // .C      R_CMethodDef
 // .Call   R_CallMethodDef
@@ -25,10 +28,13 @@ static const R_CallMethodDef CEntries[] = {
   {"decrypt_", (DL_FUNC) &decrypt_, 4},
   
   {"rcrypto_", (DL_FUNC) &rcrypto_, 2},
-  {"argon2_"      , (DL_FUNC) &argon2_      , 4},
+  {"argon2_" , (DL_FUNC) &argon2_ , 4},
   
-  {"create_public_key_", (DL_FUNC) &create_public_key_  , 2},
-  {"create_shared_key_", (DL_FUNC) &create_shared_key_  , 3},
+  {"create_public_key_", (DL_FUNC) &create_public_key_, 2},
+  {"create_shared_key_", (DL_FUNC) &create_shared_key_, 3},
+  
+  {"create_keyshares_" , (DL_FUNC) &create_keyshares_ , 4},
+  {"combine_keyshares_", (DL_FUNC) &combine_keyshares_, 2},
   
   {NULL, NULL, 0}
 };

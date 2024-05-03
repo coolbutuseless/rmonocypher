@@ -170,6 +170,27 @@ void unpack_key(SEXP key_, uint8_t key[32]) {
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void unpack_bytes(SEXP bytes_, uint8_t *buf, size_t N) {
+  
+  if (isNull(bytes_)) {
+    error("unpack_bytes(): must not be NULL");
+  } else if (TYPEOF(bytes_) == RAWSXP) {
+    memcpy(buf, RAW(bytes_), N);
+  } else if (TYPEOF(bytes_) == STRSXP) {
+    const char *str = CHAR(STRING_ELT(bytes_, 0));
+    unsigned long len = strlen(str);
+    if (len == 0 || !hexstring_to_bytes(str, buf, N)) {
+      error("unpack_bytes(): couldn't extract %zu bytes", N);
+    } 
+  } else {
+    error("unpack_bytes(): Type of 'bytes' not understood");
+  }
+}
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Pack bytes for return
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP wrap_bytes_for_return(uint8_t *buf, size_t N, SEXP type_) {

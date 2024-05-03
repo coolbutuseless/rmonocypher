@@ -23,6 +23,7 @@ based on the [`monocypher`](https://monocypher.org/) library.
     password-based key derivation
 - A secure source of random bytes generated from the operating system’s
   entropy sources
+- Key sharing using *Shamir’s Secret Sharing*
 
 #### Motivating example
 
@@ -52,8 +53,10 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
 - `rcrypto()` is a cryptographic RNG for generating random bytes using
   the operating systems cryptographically secure pseudorandom number
   generator.
+- `create_keyshares()` and `combine_keyshares()` for distributing key
+  shares to a group using *Shamir’s Secret Sharing* algorithm
 
-## \`monocypher’
+## Included Source Code
 
 The package relies on the cryptographic algorithms supplied by
 [`monocypher`](https://monocypher.org/)
@@ -63,6 +66,9 @@ The package relies on the cryptographic algorithms supplied by
   (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
   i.e. ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305
   message authentication code.
+
+Shamir’s Secret Sharing uses Daan Sprenkel’s
+[sss](https://github.com/dsprenkels/sss) code.
 
 ## Installation
 
@@ -166,9 +172,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] a5 fd 20 4d 85 d9 e3 a3 b5 86 3b 9a 87 fb ab ea 75 c0 9e 13 d0 37 1b 7a 0d
-    #> [26] 00 00 00 00 00 00 00 23 5b 5d 0d 55 33 ef 84 18 ac 01 37 9c c6 6a ac b9 a2
-    #> [51] b9 59 e1 cb e1 c2 26 bb fe 6b f0
+    #>  [1] 7f 26 2d d2 e4 f4 76 d2 4f a8 e7 3c 42 09 1b df 83 5e ab 3c fb 6b de 89 0d
+    #> [26] 00 00 00 00 00 00 00 54 c2 74 19 47 25 5a 5f db 03 02 08 93 18 6a f3 52 5e
+    #> [51] d9 b3 9c c1 f4 2e 87 6c 57 a8 5f
 
 ``` r
 # Decrypt using the same key
@@ -260,7 +266,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "0970afa5910d39f03782fcd3046a63564cbb323ed944851a6280a6813f51db47"
+    #> [1] "2717a4e7ea20593a290c9372aee5fda40c941bd72e567401e4cb4a4611d30566"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -308,6 +314,70 @@ create_shared_key(your_public, their_secret)
 ```
 
     #> [1] "e944b1aad518537ab1a8e2194565b9fc9f75f7abdff3978872afb4d70575c9fa"
+
+## Shamir’s Secret Sharing
+
+*Shamir’s Secret Sharing* algorithm allows a key to be split into
+multiple parts (*keyshares*) and shared. When splitting the key, the
+number (`k`) is specified to indicate how many keyshares are required to
+reconstruct the key. Any individual *keyshare* cannot reveal the key.
+See
+[wikipedia](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing).
+
+#### Application example (from wikipedia)
+
+    A company needs to secure their vault. If a single person knows the 
+    code to the vault, the code might be lost or unavailable when the 
+    vault needs to be opened. If there are several people who know the 
+    code, they may not trust each other to always act honestly.
+
+    SSS can be used in this situation to generate shares of the vault's code
+    which are distributed to authorized individuals in the company. The 
+    minimum threshold and number of shares given to each individual can be 
+    selected such that the vault is accessible only by (groups of) authorized 
+    individuals. If fewer shares than the threshold are presented, the vault
+    cannot be opened.
+
+    By accident, coercion or as an act of opposition, some individuals might 
+    present incorrect information for their shares. If the total of correct 
+    shares fails to meet the minimum threshold, the vault remains locked.
+
+``` r
+orig_key <- "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
+shares <- create_keyshares(orig_key, n = 6, k = 3)
+shares
+```
+
+    #> [[1]]
+    #> [1] "01bb32dc2a82937fff89f3d79c13fb4555f9af330f1d9773951b110d65595ea158"
+    #> 
+    #> [[2]]
+    #> [1] "0264d031a6ea3bc0b254c23fa4781c6327b3a122f087c79a2e4860700a7407c311"
+    #> 
+    #> [[3]]
+    #> [1] "03ec9e44cc0b39ab4fd5b5a44eded1e763be4b205275ddb5509f1985559965a50c"
+    #> 
+    #> [[4]]
+    #> [1] "04f6ff515f3150af26bf9ec9bd6af86cb3153a4b1f55fa9d9e1bbd0c542b9bc24e"
+    #> 
+    #> [[5]]
+    #> [1] "057eb12435d052c4db3ee95257cc35e8f718d049bda7e0b2e0ccc4f90bc6f9a453"
+    #> 
+    #> [[6]]
+    #> [1] "06a153c9b9b8fa7b96e3d8ba6fa7d2ce8552de58423db05b5b9fb58464eba0c61a"
+
+``` r
+# Reassemble original key from any 3 keyshares
+combine_keyshares(shares[c(1, 2, 3)])
+```
+
+    #> [1] "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
+
+``` r
+combine_keyshares(shares[c(6, 1, 4)])
+```
+
+    #> [1] "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
 
 # Additional data
 
@@ -357,9 +427,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] 2f 91 78 cd 38 e3 39 22 b1 fb f8 2f 34 ee f7 8c 8a 1e f2 b7 e7 7f 86 15 13
-    #> [26] 00 00 00 00 00 00 00 b3 70 6e ec 53 75 df 73 c8 d9 25 b9 2c 46 7d 53 f5 e2
-    #> [51] 18 61 0b 50 31 28 8f 4c 78 ff e9 9b be 20 b9 22 e3
+    #>  [1] a6 c4 72 08 57 2b fb 4e a1 69 5a 17 7a da c9 66 3f b7 e5 d6 36 86 4b 48 13
+    #> [26] 00 00 00 00 00 00 00 1e 33 6f 93 8d 29 89 aa 08 6f b6 0d fb 89 57 99 66 b6
+    #> [51] 77 bc 32 08 9a eb 5e c4 63 ff db 0f 42 16 43 5a 23
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.
@@ -424,3 +494,6 @@ the beginning of the file.
 This package uses the [monocypher](https://monocypher.org) encryption
 library v4.0.2 to provide ‘authenticated encryption with additional
 data’ (AEAD) and Argon2 password-based key derivation.
+
+Shamir’s Secret Sharing uses Daan Sprenkel’s
+[sss](https://github.com/dsprenkels/sss) code.
