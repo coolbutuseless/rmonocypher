@@ -43,6 +43,7 @@ based on the [`monocypher`](https://monocypher.org/) library.
 * A secure source of random bytes generated from the operating system's entropy sources
 * Key sharing using *Shamir's Secret Sharing* 
 * General-purpose cryptographic hashing using ['blake2b'](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2) hash function
+* Read/write encrypted objects to file
 
 #### Motivating example
 
@@ -75,6 +76,7 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   shares to a group using *Shamir's Secret Sharing* algorithm
 * `blake2b()` for hashing any R object
 * `blake2b_raw()` for hashing raw bytes and strings directly
+* `encrypt_obj()` and `decrypt_obj()` for saving encrypted objects to file
 
 ## Included Source Code 
 
@@ -98,6 +100,16 @@ To install `rmonocypher` from [GitHub](https://github.com/coolbutuseless/rmonocy
 # install.packages("devtools")
 devtools::install_github("coolbutuseless/rmonocypher")
 ```
+
+# Saving encrypted objects to file
+
+```{r}
+file <- tempfile()
+encrypt_obj(head(mtcars), filename = file, key = "mykey")
+decrypt_obj(filename = file, key = "mykey")
+```
+
+
 
 # Using the `cryptfile()` connection
 

@@ -22,5 +22,5 @@ cryptographic hash of the raw vector or string
 Calculate cryptographic hash or raw vector or string using 'blake2b'
 }
 \examples{
-blake2b_raw("hello")
+blake2b_raw("apple")
 }

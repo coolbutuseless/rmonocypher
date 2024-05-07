@@ -19,6 +19,9 @@ SEXP combine_keyshares_(SEXP shares_, SEXP type_);
 SEXP blake2b_(SEXP robj_, SEXP N_, SEXP type_);
 SEXP blake2b_raw_(SEXP x_, SEXP N_, SEXP type_);
 
+SEXP   serialize_(SEXP robj, SEXP filename_, SEXP key_);
+SEXP unserialize_(           SEXP filename_, SEXP key_);
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // .C      R_CMethodDef
 // .Call   R_CallMethodDef
@@ -29,6 +32,9 @@ static const R_CallMethodDef CEntries[] = {
   
   {"encrypt_", (DL_FUNC) &encrypt_, 3},
   {"decrypt_", (DL_FUNC) &decrypt_, 4},
+  
+  {"serialize_"  , (DL_FUNC) &serialize_  , 3},
+  {"unserialize_", (DL_FUNC) &unserialize_, 2},
   
   {"rcrypto_", (DL_FUNC) &rcrypto_, 2},
   {"argon2_" , (DL_FUNC) &argon2_ , 4},

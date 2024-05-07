@@ -33,7 +33,7 @@ blake2b <- function(robj, N = 32, type = 'string') {
 #' @return cryptographic hash of the raw vector or string
 #' @export
 #' @examples
-#' blake2b_raw("hello")
+#' blake2b_raw("apple")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 blake2b_raw <- function(x, N = 32, type = 'string') {
   .Call(blake2b_raw_, x, N, type)

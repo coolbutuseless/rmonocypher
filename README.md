@@ -27,6 +27,7 @@ based on the [`monocypher`](https://monocypher.org/) library.
 - General-purpose cryptographic hashing using
   [‘blake2b’](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2)
   hash function
+- Read/write encrypted objects to file
 
 #### Motivating example
 
@@ -60,6 +61,8 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   shares to a group using *Shamir’s Secret Sharing* algorithm
 - `blake2b()` for hashing any R object
 - `blake2b_raw()` for hashing raw bytes and strings directly
+- `encrypt_obj()` and `decrypt_obj()` for saving encrypted objects to
+  file
 
 ## Included Source Code
 
@@ -84,6 +87,22 @@ To install `rmonocypher` from
 # install.packages("devtools")
 devtools::install_github("coolbutuseless/rmonocypher")
 ```
+
+# Saving encrypted objects to file
+
+``` r
+file <- tempfile()
+encrypt_obj(head(mtcars), filename = file, key = "mykey")
+decrypt_obj(filename = file, key = "mykey")
+```
+
+    #>                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
+    #> Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
+    #> Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
+    #> Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
+    #> Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
+    #> Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
+    #> Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1
 
 # Using the `cryptfile()` connection
 
@@ -129,7 +148,7 @@ Attempting to read the file without decrypting it will not work:
 readRDS(path)
 ```
 
-    #> Error in readRDS(path): cannot read unreleased workspace version -1999629075 written by experimental R 6521.27.162
+    #> Error in readRDS(path): unknown input format
 
 ### More examples using `cryptfile()` connection
 
@@ -177,9 +196,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] ab 55 7f cd fd 11 cc d2 0f a7 0d 26 7c 52 f0 54 3d d4 c6 f9 fc cb 50 8b 0d
-    #> [26] 00 00 00 00 00 00 00 f6 0b cc d1 41 de 84 7f 21 cd cc a3 c0 f8 9d 4e a0 77
-    #> [51] 76 d7 b4 94 49 cf 3a ce bc ca 4c
+    #>  [1] a0 22 9f 7b a1 26 11 43 73 fd 0f 4c 1d 5c 46 b1 b3 a3 70 ad 1c d4 7d 58 0d
+    #> [26] 00 00 00 00 00 00 00 b3 20 6e f7 27 a4 78 bb 37 7d 09 49 65 e9 a7 13 6f cf
+    #> [51] a9 20 43 ee 4e 98 72 e5 eb aa e7
 
 ``` r
 # Decrypt using the same key
@@ -271,7 +290,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "cc58bf4ca0e15d1649c94a0b0b6150e3ca602c4a936fcc2e1cb07c1c1a9d19e4"
+    #> [1] "34f900b2f06bff2563794085d884f8f1c4700e26b8ba602a5b498461ed76b5d3"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -354,22 +373,22 @@ shares
 ```
 
     #> [[1]]
-    #> [1] "0132194cd30da2d410968fca6c6f1885898ecc699d0c9b16a8460ea31bd298f327"
+    #> [1] "01289b3b0ae4e882b52eefa036367f8332213a2cfe35e283b8562a73715a737a4e"
     #> 
     #> [[2]]
-    #> [1] "0235fd03f8ed94716d38253d4d3757e7dd8fdddc9c74e07149cc6e371f659cf7ab"
+    #> [1] "02213593ad0479d72fcdb0499d8408b36cc928da08d26efb4700d9b4633648c8e3"
     #> 
     #> [[3]]
-    #> [1] "033498e66b83a7b17fa62ebb57ed79a345f55484ac97f63b0a46086c3e0338c3c9"
+    #> [1] "033ad201e783004198ebdba5dd0741f14f1c57c75b080124149a9b3f28d80775e8"
     #> 
     #> [[4]]
-    #> [1] "042f521109370c0beb34372d3c1e000323081c9f90c148d424f06182f77986dc2a"
+    #> [1] "0487a8c97e7e3274238b49730c67ccd00788e595f0eba40180eec57f99a4517ae4"
     #> 
     #> [[5]]
-    #> [1] "052e37f49a593fcbf9aa3cab26c42e47bb7295c7a0225e9e677a07d9d61f22e848"
+    #> [1] "059c4f5b34f94be294ad229f4ce48592245d9a88a331cbded37487f4d24a1ec7ef"
     #> 
     #> [[6]]
-    #> [1] "0629d3bbb1b9096e8404965c079c6125ef738472a15a25f986f0674dd2a826ecc4"
+    #> [1] "0695e1f39319dab70e4e7d76e756f2a27ab5887e55d647a62c227433c026257542"
 
 ``` r
 # Reassemble original key from any 3 keyshares
@@ -463,9 +482,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] 4d 39 66 4b 08 b3 b5 c1 90 3e 60 a3 25 b3 92 01 17 08 76 86 f4 40 37 93 13
-    #> [26] 00 00 00 00 00 00 00 f8 6f 46 e0 d0 25 5a 9c 3f dd f4 28 2e 6e 01 19 6e 3f
-    #> [51] c3 38 1f 58 ad 48 a0 a6 23 e9 50 6c f0 c3 d5 0b 5a
+    #>  [1] 25 e9 44 d3 d0 d7 76 c5 fc 7c bf b0 90 9b fa 4c 53 1f 3b fd 07 32 76 df 13
+    #> [26] 00 00 00 00 00 00 00 77 68 99 98 6d 0c 53 1c 90 8f ee 4f 3d 7a 5e 4e 8c 31
+    #> [51] 40 86 03 e9 90 fd f5 aa f0 ab 2f 36 18 89 c7 29 ac
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.
