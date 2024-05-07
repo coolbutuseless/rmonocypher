@@ -24,6 +24,9 @@ based on the [`monocypher`](https://monocypher.org/) library.
 - A secure source of random bytes generated from the operating system’s
   entropy sources
 - Key sharing using *Shamir’s Secret Sharing*
+- General-purpose cryptographic hashing using
+  [‘blake2b’](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2)
+  hash function
 
 #### Motivating example
 
@@ -55,6 +58,8 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   generator.
 - `create_keyshares()` and `combine_keyshares()` for distributing key
   shares to a group using *Shamir’s Secret Sharing* algorithm
+- `blake2b()` for hashing any R object
+- `blake2b_raw()` for hashing raw bytes and strings directly
 
 ## Included Source Code
 
@@ -124,7 +129,7 @@ Attempting to read the file without decrypting it will not work:
 readRDS(path)
 ```
 
-    #> Error in readRDS(path): unknown input format
+    #> Error in readRDS(path): cannot read unreleased workspace version -1999629075 written by experimental R 6521.27.162
 
 ### More examples using `cryptfile()` connection
 
@@ -172,9 +177,9 @@ enc <- encrypt(dat, key = "my secret")
 enc
 ```
 
-    #>  [1] 7f 26 2d d2 e4 f4 76 d2 4f a8 e7 3c 42 09 1b df 83 5e ab 3c fb 6b de 89 0d
-    #> [26] 00 00 00 00 00 00 00 54 c2 74 19 47 25 5a 5f db 03 02 08 93 18 6a f3 52 5e
-    #> [51] d9 b3 9c c1 f4 2e 87 6c 57 a8 5f
+    #>  [1] ab 55 7f cd fd 11 cc d2 0f a7 0d 26 7c 52 f0 54 3d d4 c6 f9 fc cb 50 8b 0d
+    #> [26] 00 00 00 00 00 00 00 f6 0b cc d1 41 de 84 7f 21 cd cc a3 c0 f8 9d 4e a0 77
+    #> [51] 76 d7 b4 94 49 cf 3a ce bc ca 4c
 
 ``` r
 # Decrypt using the same key
@@ -266,7 +271,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "2717a4e7ea20593a290c9372aee5fda40c941bd72e567401e4cb4a4611d30566"
+    #> [1] "cc58bf4ca0e15d1649c94a0b0b6150e3ca602c4a936fcc2e1cb07c1c1a9d19e4"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
@@ -349,22 +354,22 @@ shares
 ```
 
     #> [[1]]
-    #> [1] "01bb32dc2a82937fff89f3d79c13fb4555f9af330f1d9773951b110d65595ea158"
+    #> [1] "0132194cd30da2d410968fca6c6f1885898ecc699d0c9b16a8460ea31bd298f327"
     #> 
     #> [[2]]
-    #> [1] "0264d031a6ea3bc0b254c23fa4781c6327b3a122f087c79a2e4860700a7407c311"
+    #> [1] "0235fd03f8ed94716d38253d4d3757e7dd8fdddc9c74e07149cc6e371f659cf7ab"
     #> 
     #> [[3]]
-    #> [1] "03ec9e44cc0b39ab4fd5b5a44eded1e763be4b205275ddb5509f1985559965a50c"
+    #> [1] "033498e66b83a7b17fa62ebb57ed79a345f55484ac97f63b0a46086c3e0338c3c9"
     #> 
     #> [[4]]
-    #> [1] "04f6ff515f3150af26bf9ec9bd6af86cb3153a4b1f55fa9d9e1bbd0c542b9bc24e"
+    #> [1] "042f521109370c0beb34372d3c1e000323081c9f90c148d424f06182f77986dc2a"
     #> 
     #> [[5]]
-    #> [1] "057eb12435d052c4db3ee95257cc35e8f718d049bda7e0b2e0ccc4f90bc6f9a453"
+    #> [1] "052e37f49a593fcbf9aa3cab26c42e47bb7295c7a0225e9e677a07d9d61f22e848"
     #> 
     #> [[6]]
-    #> [1] "06a153c9b9b8fa7b96e3d8ba6fa7d2ce8552de58423db05b5b9fb58464eba0c61a"
+    #> [1] "0629d3bbb1b9096e8404965c079c6125ef738472a15a25f986f0674dd2a826ecc4"
 
 ``` r
 # Reassemble original key from any 3 keyshares
@@ -378,6 +383,37 @@ combine_keyshares(shares[c(6, 1, 4)])
 ```
 
     #> [1] "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
+
+## Cryptographic Hash `blake2b()` and `blake2b_raw()`
+
+    BLAKE2 is a cryptographic hash function based on BLAKE, created by 
+    Jean-Philippe Aumasson, Samuel Neves, Zooko Wilcox-O'Hearn, and Christian 
+    Winnerlein. The design goal was to replace the widely used, but broken, 
+    MD5 and SHA-1 algorithms in applications requiring high performance in software
+
+For more on why you might want a cryptographic hash vs a regular hash,
+see [wikipedia article on cryptographic hash
+functions](https://en.wikipedia.org/wiki/Cryptographic_hash_function).
+
+``` r
+# Hash of any R object using R's serialization mechanism
+blake2b(mtcars)
+```
+
+    #> [1] "c848f0df5ceeaa64f86d9e73a5e3d26dd6f9169f83e0ee499bba612df0aa2985"
+
+``` r
+# Hash of raw vectors and strings directly
+blake2b_raw(as.raw(1:20))
+```
+
+    #> [1] "877a567036d56c98c42ea9a05d739b5537423d24411579286fd93816d5e296c7"
+
+``` r
+blake2b_raw("hello")
+```
+
+    #> [1] "324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf"
 
 # Additional data
 
@@ -427,9 +463,9 @@ letter
     #> [1] "To: Judy"
     #> 
     #> $message
-    #>  [1] a6 c4 72 08 57 2b fb 4e a1 69 5a 17 7a da c9 66 3f b7 e5 d6 36 86 4b 48 13
-    #> [26] 00 00 00 00 00 00 00 1e 33 6f 93 8d 29 89 aa 08 6f b6 0d fb 89 57 99 66 b6
-    #> [51] 77 bc 32 08 9a eb 5e c4 63 ff db 0f 42 16 43 5a 23
+    #>  [1] 4d 39 66 4b 08 b3 b5 c1 90 3e 60 a3 25 b3 92 01 17 08 76 86 f4 40 37 93 13
+    #> [26] 00 00 00 00 00 00 00 f8 6f 46 e0 d0 25 5a 9c 3f dd f4 28 2e 6e 01 19 6e 3f
+    #> [51] c3 38 1f 58 ad 48 a0 a6 23 e9 50 6c f0 c3 d5 0b 5a
 
 ``` r
 # Recipient decodes message, and the 'address' forms part of the decryption.

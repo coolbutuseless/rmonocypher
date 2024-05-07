@@ -181,7 +181,7 @@ void unpack_bytes(SEXP bytes_, uint8_t *buf, size_t N) {
   } else if (TYPEOF(bytes_) == STRSXP) {
     const char *str = CHAR(STRING_ELT(bytes_, 0));
     unsigned long len = strlen(str);
-    if (len == 0 || !hexstring_to_bytes(str, buf, N)) {
+    if (len == 0 || !hexstring_to_bytes(str, buf, (int)N)) {
       error("unpack_bytes(): couldn't extract %zu bytes", N);
     } 
   } else {

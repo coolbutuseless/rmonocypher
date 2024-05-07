@@ -16,6 +16,9 @@ SEXP create_shared_key_(SEXP their_public_key_, SEXP your_secret_key_, SEXP type
 SEXP create_keyshares_(SEXP key_, SEXP n_, SEXP k_, SEXP type_);
 SEXP combine_keyshares_(SEXP shares_, SEXP type_);
 
+SEXP blake2b_(SEXP robj_, SEXP N_, SEXP type_);
+SEXP blake2b_raw_(SEXP x_, SEXP N_, SEXP type_);
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // .C      R_CMethodDef
 // .Call   R_CallMethodDef
@@ -35,6 +38,9 @@ static const R_CallMethodDef CEntries[] = {
   
   {"create_keyshares_" , (DL_FUNC) &create_keyshares_ , 4},
   {"combine_keyshares_", (DL_FUNC) &combine_keyshares_, 2},
+  
+  {"blake2b_", (DL_FUNC) &blake2b_, 3},
+  {"blake2b_raw_", (DL_FUNC) &blake2b_raw_, 3},
   
   {NULL, NULL, 0}
 };

@@ -43,15 +43,15 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP create_keyshares_(SEXP key_, SEXP n_, SEXP k_, SEXP type_) {
   
-  if (asInteger(n_) <= 1) {
+  if (asInteger(n_) <= 1 || asInteger(n_) > 255) {
     error("Bad n");
   }
-  if (asInteger(k_) < 1) {
+  if (asInteger(k_) < 1 || asInteger(k_) > 255) {
     error("Bad k");
   }
   
-  uint8_t n = asInteger(n_);
-  uint8_t k = asInteger(k_);
+  uint8_t n = (uint8_t)asInteger(n_);
+  uint8_t k = (uint8_t)asInteger(k_);
   
   uint8_t key[32];
   unpack_key(key_, key);
@@ -67,7 +67,7 @@ SEXP create_keyshares_(SEXP key_, SEXP n_, SEXP k_, SEXP type_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   sss_create_keyshares(out, key, n, k);
   
-  SEXP res_ = PROTECT(allocVector(VECSXP, (size_t)n));
+  SEXP res_ = PROTECT(allocVector(VECSXP, (R_xlen_t)n));
   
   for (int i = 0; i < n; i++) { 
     SET_VECTOR_ELT(res_, i, wrap_bytes_for_return(out[i], sss_KEYSHARE_LEN, type_));
@@ -104,11 +104,11 @@ SEXP combine_keyshares_(SEXP shares_, SEXP type_) {
   }
   
   int k = (int)length(shares_);
-  if (k < 1) {
+  if (k < 1 || k > 255) {
     error("Bad k");
   }
   
-  sss_Keyshare *shares = calloc(k, sizeof(sss_Keyshare));
+  sss_Keyshare *shares = calloc((unsigned long)k, sizeof(sss_Keyshare));
   
   
   for (int i = 0; i < k; i++) {
@@ -123,7 +123,7 @@ SEXP combine_keyshares_(SEXP shares_, SEXP type_) {
   //                            uint8_t k);
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t key[32];
-  sss_combine_keyshares(key, (const sss_Keyshare *)shares, k);
+  sss_combine_keyshares(key, (const sss_Keyshare *)shares, (uint8_t)k);
   // SEXP key_ = PROTECT(allocVector(RAWSXP, 32));
   // memcpy(RAW(key_), key, 32);
   

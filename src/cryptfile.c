@@ -256,7 +256,7 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
       if (cstate->fp == NULL) error("cryptfile_open_(): Couldn't open file '%s'", rconn->description);
     } else {
       strcpy(cstate->inner->mode, "rb");
-      int res = cstate->inner->open(cstate->inner);
+      int res = (int)cstate->inner->open(cstate->inner);
       if (!res) {
         error("cryptfile_open(): Couldn't open inner connection for reading");
       }
@@ -296,7 +296,7 @@ Rboolean cryptfile_open(struct Rconn *rconn) {
       }
     } else {
       strcpy(cstate->inner->mode, "wb");
-      int res = cstate->inner->open(cstate->inner);
+      int res = (int)cstate->inner->open(cstate->inner);
       if (!res) {
         error("cryptfile_open(): Couldn't open inner connection for writing");
       }

@@ -42,6 +42,7 @@ based on the [`monocypher`](https://monocypher.org/) library.
     * Using ['Argon2'](https://en.wikipedia.org/wiki/Argon2) for password-based key derivation
 * A secure source of random bytes generated from the operating system's entropy sources
 * Key sharing using *Shamir's Secret Sharing* 
+* General-purpose cryptographic hashing using ['blake2b'](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2) hash function
 
 #### Motivating example
 
@@ -72,6 +73,8 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   operating systems cryptographically secure pseudorandom number generator.
 * `create_keyshares()` and `combine_keyshares()` for distributing key 
   shares to a group using *Shamir's Secret Sharing* algorithm
+* `blake2b()` for hashing any R object
+* `blake2b_raw()` for hashing raw bytes and strings directly
 
 ## Included Source Code 
 
@@ -326,6 +329,24 @@ combine_keyshares(shares[c(1, 2, 3)])
 combine_keyshares(shares[c(6, 1, 4)])
 ```
 
+
+## Cryptographic Hash `blake2b()` and `blake2b_raw()`
+
+    BLAKE2 is a cryptographic hash function based on BLAKE, created by 
+    Jean-Philippe Aumasson, Samuel Neves, Zooko Wilcox-O'Hearn, and Christian 
+    Winnerlein. The design goal was to replace the widely used, but broken, 
+    MD5 and SHA-1 algorithms in applications requiring high performance in software
+
+For more on why you might want a cryptographic hash vs a regular hash, see
+[wikipedia article on cryptographic hash functions](https://en.wikipedia.org/wiki/Cryptographic_hash_function).
+
+```{r}
+# Hash of any R object using R's serialization mechanism
+blake2b(mtcars)
+# Hash of raw vectors and strings directly
+blake2b_raw(as.raw(1:20))
+blake2b_raw("hello")
+```
 
 
 

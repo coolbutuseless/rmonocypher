@@ -80,7 +80,7 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   // Cipher Text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   size_t N = payload_size + NONCESIZE + MACSIZE + LENGTHSIZE;
-  SEXP cipher_text_ = PROTECT(allocVector(RAWSXP, N));
+  SEXP cipher_text_ = PROTECT(allocVector(RAWSXP, (R_xlen_t)N));
   uint8_t *cipher_text = RAW(cipher_text_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

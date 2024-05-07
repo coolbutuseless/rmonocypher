@@ -1,4 +1,9 @@
 
+# rmonocypher 0.1.5  2024-05-07
+
+* Add `blake2b()` for hashing any R object
+* Add `blake2b_raw()` for hashing raw vectors and strings directly.
+
 # rmonocypher 0.1.4  2024-05-03
 
 * Include functions for Shamir's Secret Sharing
