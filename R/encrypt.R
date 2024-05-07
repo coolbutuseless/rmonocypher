@@ -8,7 +8,7 @@
 #' This is a low-level function for encrypting/decrypting data using
 #' 'Authenticated Encryption with Additional Data' (AEAD).  This encryption
 #' scheme assures data confidentiality (privacy) i.e. the encrypted data is
-#' impossible to understand with the knowledge of the secret \emph{key}.
+#' impossible to understand without the knowledge of the secret \emph{key}.
 #' 
 #' The authenticity of the message is also assured i.e. the message is 
 #' unforgeable.
