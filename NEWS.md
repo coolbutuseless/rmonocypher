@@ -1,4 +1,8 @@
 
+# rmonocypher 0.1.7.9000 2024-05-08
+
+* Enable `additional_data` argument for `encrypt()`/`decrypt()`
+
 # rmonocypher 0.1.7  2024-05-08
 
 * Remove `cryptfile()`

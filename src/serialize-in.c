@@ -43,6 +43,8 @@ typedef struct {
   size_t buf_size;
   size_t payload_size;
   
+  uint8_t *ad;
+  size_t ad_len;
 } unserialize_buffer_t;
 
 
@@ -118,10 +120,16 @@ int decrypt_frame2(unserialize_buffer_t *cstate) {
     &cstate->ctx, 
     cstate->buf, 
     cstate->mac,
-    NULL, 0,
+    cstate->ad, cstate->ad_len,
     cstate->buf, 
     cstate->payload_size
   );
+  
+  if (cstate->ad != NULL) {
+    // additional data is only applied to first frame
+    cstate->ad = NULL;
+    cstate->ad_len = 0;
+  }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Was the message decrypted and authenticated?
@@ -176,7 +184,7 @@ void read_bytes_from_stream(R_inpstream_t stream, void *dst, int length) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Unpack a raw vector to an R object
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP unserialize_(SEXP filename_, SEXP key_) {
+SEXP unserialize_(SEXP filename_, SEXP key_, SEXP additional_data_) {
 
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -190,6 +198,8 @@ SEXP unserialize_(SEXP filename_, SEXP key_) {
   }
   cstate.buf_pos = 0;
   cstate.buf_size = INITBUFSIZE;
+  cstate.ad = NULL;
+  cstate.ad_len = 0;
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Open file
@@ -218,7 +228,30 @@ SEXP unserialize_(SEXP filename_, SEXP key_) {
   // Setup the crypto state
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   crypto_aead_init_x(&cstate.ctx, cstate.key, cstate.nonce);
-
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Additional data
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if (isNull(additional_data_)) {
+    // Do nothing
+  } else if (TYPEOF(additional_data_) == RAWSXP) {
+    if (length(additional_data_) > 0) {
+      cstate.ad = RAW(additional_data_);
+      cstate.ad_len = (size_t)xlength(additional_data_); 
+    } else {
+      error("unserialize_(): 'additional_data' cannot be empty raw vector");
+    }
+  } else if (TYPEOF(additional_data_) == STRSXP) {
+    const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
+    if (strlen(ad_string) > 0) {
+      cstate.ad = (uint8_t *)ad_string;
+      cstate.ad_len = strlen(ad_string);
+    } else {
+      error("unserialize_(): 'additional_data' cannot be empty string");
+    }
+  } else {
+    error("unserialize_(): 'additional_data' must be raw vector or string.");
+  }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Initial frame of data

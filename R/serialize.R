@@ -13,9 +13,9 @@
 #' encrypt(head(mtcars), file, key = "hello")
 #' decrypt(file, key = "hello")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-encrypt <- function(robj, filename, key = getOption("MONOCYPHER_KEY", default = NULL)) {
+encrypt <- function(robj, filename, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
   filename <- normalizePath(filename, mustWork = FALSE)
-  .Call(serialize_, robj, filename, key)
+  .Call(serialize_, robj, filename, key, additional_data)
   invisible(filename)
 }
 
@@ -32,8 +32,8 @@ encrypt <- function(robj, filename, key = getOption("MONOCYPHER_KEY", default = 
 #' encrypt(head(mtcars), file, key = "hello")
 #' decrypt(file, key = "hello")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-decrypt <- function(filename, key = getOption("MONOCYPHER_KEY", default = NULL)) {
+decrypt <- function(filename, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
   filename <- normalizePath(filename)
-  .Call(unserialize_, filename, key)
+  .Call(unserialize_, filename, key, additional_data)
 }
 

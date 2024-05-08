@@ -43,6 +43,9 @@ typedef struct {
   uint8_t *buf;
   size_t buf_pos;
   size_t buf_size;
+  
+  uint8_t *ad;
+  size_t ad_len;
 } serialize_buffer_t;
 
 
@@ -82,10 +85,16 @@ void write_bytes_to_stream(R_outpstream_t stream, void *src, int length) {
       &cstate->ctx,
       cstate->buf,
       cstate->mac,
-      NULL, 0,
+      cstate->ad, cstate->ad_len,
       cstate->buf,
       cstate->buf_pos
     );
+    
+    if (cstate->ad != NULL) {
+      // additional data is only applied to first frame
+      cstate->ad = NULL;
+      cstate->ad_len = 0;
+    }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Write frame
@@ -116,10 +125,16 @@ void write_bytes_to_stream(R_outpstream_t stream, void *src, int length) {
       &cstate->ctx,
       cstate->buf,
       cstate->mac,
-      NULL, 0,
+      cstate->ad, cstate->ad_len,
       src,
       nbytes
     );
+    
+    if (cstate->ad != NULL) {
+      // additional data is only applied to first frame
+      cstate->ad = NULL;
+      cstate->ad_len = 0;
+    }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Write frame
@@ -146,7 +161,7 @@ void write_bytes_to_stream(R_outpstream_t stream, void *src, int length) {
 // Serialize an R object to a buffer of fixed size and then compress
 // the buffer using zstd
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SEXP serialize_(SEXP robj, SEXP filename_, SEXP key_) {
+SEXP serialize_(SEXP robj, SEXP filename_, SEXP key_, SEXP additional_data_) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // serialization struct 
@@ -159,6 +174,8 @@ SEXP serialize_(SEXP robj, SEXP filename_, SEXP key_) {
   }
   cstate.buf_pos = 0;
   cstate.buf_size = INITBUFSIZE;
+  cstate.ad = NULL;
+  cstate.ad_len = 0;
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Open file
@@ -186,6 +203,30 @@ SEXP serialize_(SEXP robj, SEXP filename_, SEXP key_) {
   if (out != NONCESIZE) {
     free(cstate.buf);
     error("encrypt_stream(): Couldn't write to file '%s'", filename);
+  }
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Additional data
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if (isNull(additional_data_)) {
+    // Do nothing
+  } else if (TYPEOF(additional_data_) == RAWSXP) {
+    if (length(additional_data_) > 0) {
+      cstate.ad = RAW(additional_data_);
+      cstate.ad_len = (size_t)xlength(additional_data_); 
+    } else {
+      error("serialize_(): 'additional_data' cannot be empty raw vector");
+    }
+  } else if (TYPEOF(additional_data_) == STRSXP) {
+    const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
+    if (strlen(ad_string) > 0) {
+      cstate.ad = (uint8_t *)ad_string;
+      cstate.ad_len = strlen(ad_string);
+    } else {
+      error("serialize_(): 'additional_data' cannot be empty string");
+    }
+  } else {
+    error("serialize_(): 'additional_data' must be raw vector or string.");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,7 +262,7 @@ SEXP serialize_(SEXP robj, SEXP filename_, SEXP key_) {
       &cstate.ctx,
       cstate.buf,
       cstate.mac,
-      NULL, 0,
+      cstate.ad, cstate.ad_len,
       cstate.buf,
       cstate.buf_pos
     );

@@ -4,7 +4,12 @@
 \alias{encrypt}
 \title{Save an encrypted R object to file}
 \usage{
-encrypt(robj, filename, key = getOption("MONOCYPHER_KEY", default = NULL))
+encrypt(
+  robj,
+  filename,
+  key = getOption("MONOCYPHER_KEY", default = NULL),
+  additional_data = NULL
+)
 }
 \arguments{
 \item{robj}{R object}
@@ -19,6 +24,14 @@ If this argument is not explicitly set by the user
 when calling the function, an attempt is made to fetch \code{'MONOCYPHER_KEY'} from
 the session global options. 
 It is recommended that a key be created external to this function call.}
+
+\item{additional_data}{Additional data to include in the
+authentication.  Raw vector or character string. Default: NULL.  
+This additional data is \emph{not}
+included with the encrypted data, but represents an essential
+component of the message authentication. The same \code{additional_data} 
+must be presented during both encryption and decryption for the message
+to be authenticated.  See section below on 'Additional Data'.}
 }
 \value{
 None
