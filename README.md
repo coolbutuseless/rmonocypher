@@ -29,28 +29,10 @@ based on the [`monocypher`](https://monocypher.org/) library.
   hash function
 - Read/write encrypted objects to file
 
-#### Motivating example
-
-Use `{rmonocypher}` to write R data to an encrypted file on a shared
-drive, dropbox or cloud.
-
-The data is not readable by others, but easily recoverable if the `key`
-is known.
-
-``` r
-saveRDS(results, cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
-
-readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
-```
-
 ## What’s in the box
 
-- `cryptfile()` is a connection for reading/writing encrypted data.
-  - This connection automatically encrypts/decrypts data to file and can
-    be used in any function which supports connections e.g. `saveRDS()`,
-    `write.csv()`, `png::writePNG()` etc
-- `encrypt()` and `decrypt()` are for encrypting and decrypting raw
-  vectors and strings
+- `encrypt_raw()` and `decrypt_raw()` are for encrypting and decrypting
+  raw vectors and strings
 - `argon2()` derives encryption keys from pass-phrases
 - `create_public_key()` and `create_shared_key()` can be used to perform
   key exchange over an insecure channel (i.e. Public Key Cryptography)
@@ -61,8 +43,7 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   shares to a group using *Shamir’s Secret Sharing* algorithm
 - `blake2b()` for hashing any R object
 - `blake2b_raw()` for hashing raw bytes and strings directly
-- `encrypt_obj()` and `decrypt_obj()` for saving encrypted objects to
-  file
+- `encrypt()` and `decrypt()` for saving encrypted objects to file
 
 ## Included Source Code
 
@@ -88,248 +69,104 @@ To install `rmonocypher` from
 devtools::install_github("coolbutuseless/rmonocypher")
 ```
 
-# Saving encrypted objects to file
+## Save data to an encrypted file using a pass-phrase to access
+
+- Data cannot be decrypted without the key
+- Safe to save to shared folders
 
 ``` r
-file <- tempfile()
-encrypt_obj(head(mtcars), filename = file, key = "mykey")
-decrypt_obj(filename = file, key = "mykey")
+encrypt(mydata, filename = "SharedDrive/mydata.rds", key = "mykey")
+decrypt(        filename = "SharedDrive/mydata.rds", key = "mykey")
 ```
 
-    #>                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
-    #> Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
-    #> Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
-    #> Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
-    #> Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
-    #> Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
-    #> Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1
-
-# Using the `cryptfile()` connection
-
-Any function which supports reading/writing with a connection, now
-supports automatic encryption/decryption using the `cryptfile()`
-connection in this package.
-
-Many R functions support connections e.g. `read.csv()`, `saveRDS()`,
-`serialize()`, `png::writePNG()`, and these can all seamlessly use the
-`cryptfile()` connection.
-
-The output can only be recovered using the same `key` which was used for
-encryption.
+## Create an encryption key from a pass-phrase
 
 ``` r
-robj <- head(mtcars)
-path <- tempfile()
-key  <- argon2("my secret")
-saveRDS(robj, cryptfile(path, key))
-
-readRDS(cryptfile(path, key))
+key <- argon2("horse battery stapler")
+key
 ```
 
-    #>                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
-    #> Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
-    #> Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
-    #> Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
-    #> Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
-    #> Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
-    #> Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1
+    #> [1] "2d465fc9f8e116425a3003c8e8edfeb490a14116099f0b3e78b830bb32e38da4"
 
-Attempting to use an incorrect key will not work:
+## Save data to an encrypted file using an encryption key
 
 ``` r
-readRDS(cryptfile(path, "wrong key"))
+# Create a key
+key <- argon2("horse battery stapler")
+
+encrypt(mydata, filename = "SharedDrive/mydata.rds", key = key)
+decrypt(        filename = "SharedDrive/mydata.rds", key = key)
 ```
 
-    #> Error in readRDS(cryptfile(path, "wrong key")): decrypt_frame_(): Decryption failed
-
-Attempting to read the file without decrypting it will not work:
+## Save data to an encrypted file using encryption key set in via `options()`
 
 ``` r
-readRDS(path)
+# Create a key and set via options() 
+key <- argon2("horse battery stapler")
+options(MONOCYPHER_KEY = key)
+
+
+encrypt(mydata, filename = "SharedDrive/mydata.rds")
+decrypt(        filename = "SharedDrive/mydata.rds")
 ```
 
-    #> Error in readRDS(path): unknown input format
+## Create some truly random bytes
 
-### More examples using `cryptfile()` connection
+Using your OS built-in cryptographic pseudorandom number generator.
 
 ``` r
-# Saving R objects
-saveRDS(robj, cryptfile(path, key))
-readRDS(cryptfile(path, key))
-
-# CSV files
-write.csv(iris, cryptfile(path, key))
-read.csv(cryptfile(path, key))
-
-# PNG files
-png::writePNG(image, cryptfile(path, key))
-png::readPNG(cryptfile(path, key))
-
-# sink()
-sink(cryptfile(path, key))
-...
-sink()
-
-# Text
-writeLines(my_diary, cryptfile(path, key))
-readLines(cryptfile(path, key))
-
-# cat()
-cat(data, cryptfile(path, key))
+rcrypto(n = 16)
 ```
 
-# Simple encrypt/decrypt of raw data and strings
-
-`encrypt()` and `decrypt()` are functions for directly encrypting
-strings and raw vectors
+    #> [1] "fbe309fd006e83aca10b81941e803ad0"
 
 ``` r
-library(rmonocypher)
-
-# Plain text. Can be string or raw bytes
-dat <- "Hello #RStats"
-
-# Encrypt 
-enc <- encrypt(dat, key = "my secret")
-
-# the encrypted data
-enc
+rcrypto(n = 16, type = 'raw')
 ```
 
-    #>  [1] a0 22 9f 7b a1 26 11 43 73 fd 0f 4c 1d 5c 46 b1 b3 a3 70 ad 1c d4 7d 58 0d
-    #> [26] 00 00 00 00 00 00 00 b3 20 6e f7 27 a4 78 bb 37 7d 09 49 65 e9 a7 13 6f cf
-    #> [51] a9 20 43 ee 4e 98 72 e5 eb aa e7
+    #>  [1] cc 2e 53 11 c4 2b fa 09 1a 72 88 4f 63 4a 0e 0f
+
+## Create a cryptographic hash of your data
 
 ``` r
-# Decrypt using the same key
-decrypt(enc, key = "my secret", type = 'string')
+blake2b(mtcars)
 ```
 
-    #> [1] "Hello #RStats"
-
-# Encryption keys
-
-The encryption `key` is the core secret information that allows for
-encrypting data.
-
-The `key` for encryption may be one of:
-
-- A 32-byte raw vector
-- A 64-character hexadecimal string
-- A pass-phrase
-
-The `key` may be created by:
-
-- Using random bytes from a cryptographically secure source
-- Using Argon2 to derive random bytes from a pass-phrase
-- Creating a shared key through key exchange with another person
-
-When calling functions in `{rmonocypher}`, the key may be set explicitly
-when the function is called, but can also be set globally for the
-current session using `options(MONOCYPHER_KEY = "...")`
-
-## Using random bytes as a key
-
-``` r
-# Random raw bytes
-key <- as.raw(sample(0:255, 32, TRUE))
-
-# Random raw bytes from rcrypto()
-key <- rcrypto(32)
-
-# 64-character hexadecimal string
-key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
-```
-
-## Argon2: Password-based Key Derivation
-
-Argon2 is a resource intensive password-based key derivation scheme.
-
-Use `argon2()` to generate random bytes for keys from a pass-phrase. It
-is recommended to further defend against attackers using rainbow tables
-by providing extra bytes of `salt`.
-
-If no explicit `salt` is provided, a salt will be derived internally
-from the pass-phrase. This is deterministic such that the same
-pass-phase will always generate the same key. This is convenient, but
-not as secure as using another pass-phrase or random bytes for the
-`salt`.
-
-``` r
-# When no salt is provided, a salt will be 
-# derived internally from the pass-phrase.  This is convenient, but 
-# not as secure as using random bytes.
-argon2("my secret")
-```
-
-    #> [1] "bd7549bef4100b888c47e421b03c52fee58b285fcc40dfa4c0502689c4ed16d0"
-
-``` r
-# Use text as the salt
-argon2("my secret", salt = "salt and vinegar")
-```
-
-    #> [1] "16df2856ba2ecc020ff506831a691b1d92616948197fb74fa651bfc89cad65e4"
-
-``` r
-# Use a 32-character hexadecimal string as the salt
-argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
-```
-
-    #> [1] "2216b700af05984f21d7465487f21de0096f7aaa164d2b56c54803e3891ec071"
-
-``` r
-# Use 16-bytes of random data for the salt
-argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
-```
-
-    #> [1] "368d4613996f6d9083524bfacf972117fc40953461a248b9c5406aeeb7b3c93e"
-
-``` r
-# Use 'rcrypto()' to source 16 random bytes for the salt
-argon2("my secret", salt = rcrypto(16))
-```
-
-    #> [1] "34f900b2f06bff2563794085d884f8f1c4700e26b8ba602a5b498461ed76b5d3"
+    #> [1] "c848f0df5ceeaa64f86d9e73a5e3d26dd6f9169f83e0ee499bba612df0aa2985"
 
 ## Securely exchange keys over insecure channels with public key encryption.
 
-**Note:** This is an advanced topic, and not essential for regular use
-of encryption when only you are accessing data, or you have a secure way
-to share the key with others.
-
-`{rmonocypher}` implement public-key cryptography using x25519. X25519
-is an elliptic curve Diffie-Hellman key exchange using Curve25519. It
-allows two parties to jointly agree on a shared secret using an insecure
-channel.
-
-Steps:
-
-1.  Both users create a secret key (these are never shared!)
-2.  Both users derive the public key from their secret key
-3.  Users swap their public keys. These do not need to be kept secure.
-4.  Both users use their secret key in conjunction with the other user’s
-    public key to derive **the exact same key** !
-5.  Now both users know the same shared key and can encrypt and decrypt
-    messages from each other.
+#### You: create a secret and public key
 
 ``` r
 # You: Create a secret key and a public key.
-# You: Share the public key with other party
 your_secret <- argon2("hello")
 your_public <- create_public_key(your_secret)
+```
 
+#### They: create a secret and public key
+
+``` r
 # They: Create a secret key and a public key
-# They: Share their public key with you
 their_secret <- argon2("goodbye")
 their_public <- create_public_key(their_secret)
+```
 
+#### Swap public keys
+
+These can be swapped in the open (e.g. via email)
+
+#### You: Create a shared key
+
+``` r
 # You: Use their public key and your secret key
 #      to derive the common shared key
 create_shared_key(their_public, your_secret)
 ```
 
     #> [1] "e944b1aad518537ab1a8e2194565b9fc9f75f7abdff3978872afb4d70575c9fa"
+
+#### They: Create the same shared key
 
 ``` r
 # They: Use your public key and their secret key
@@ -339,170 +176,46 @@ create_shared_key(your_public, their_secret)
 
     #> [1] "e944b1aad518537ab1a8e2194565b9fc9f75f7abdff3978872afb4d70575c9fa"
 
-## Shamir’s Secret Sharing
-
-*Shamir’s Secret Sharing* algorithm allows a key to be split into
-multiple parts (*keyshares*) and shared. When splitting the key, the
-number (`k`) is specified to indicate how many keyshares are required to
-reconstruct the key. Any individual *keyshare* cannot reveal the key.
-See
-[wikipedia](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing).
-
-#### Application example (from wikipedia)
-
-    A company needs to secure their vault. If a single person knows the 
-    code to the vault, the code might be lost or unavailable when the 
-    vault needs to be opened. If there are several people who know the 
-    code, they may not trust each other to always act honestly.
-
-    SSS can be used in this situation to generate shares of the vault's code
-    which are distributed to authorized individuals in the company. The 
-    minimum threshold and number of shares given to each individual can be 
-    selected such that the vault is accessible only by (groups of) authorized 
-    individuals. If fewer shares than the threshold are presented, the vault
-    cannot be opened.
-
-    By accident, coercion or as an act of opposition, some individuals might 
-    present incorrect information for their shares. If the total of correct 
-    shares fails to meet the minimum threshold, the vault remains locked.
+## Split an encryption key into `n` parts with only `k` keyshares needed to decode
 
 ``` r
-orig_key <- "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
-shares <- create_keyshares(orig_key, n = 6, k = 3)
+key <- argon2("horse battery stapler")
+key
+```
+
+    #> [1] "2d465fc9f8e116425a3003c8e8edfeb490a14116099f0b3e78b830bb32e38da4"
+
+``` r
+# Split the key into 6 keyshares. Any 3 keyshares can re-construct.
+shares <- create_keyshares(key, n = 6, k = 3)
+# Distribute these shares to your group
 shares
 ```
 
     #> [[1]]
-    #> [1] "01289b3b0ae4e882b52eefa036367f8332213a2cfe35e283b8562a73715a737a4e"
+    #> [1] "013796fa1d0db1b5402e805223c913934cd1c4883e0b49e497f7d6bde07ffa5a6e"
     #> 
     #> [[2]]
-    #> [1] "02213593ad0479d72fcdb0499d8408b36cc928da08d26efb4700d9b4633648c8e3"
+    #> [1] "0204ecb090f9d5866d5a76f620584a03c85afb1e38562b0a1ff5a4222e6b636565"
     #> 
     #> [[3]]
-    #> [1] "033ad201e783004198ebdba5dd0741f14f1c57c75b080124149a9b3f28d80775e8"
+    #> [1] "031e3c15440c85256f2ec6a7cb79b46e301b9ed71054fde5b67acaaf75267ab2af"
     #> 
     #> [[4]]
-    #> [1] "0487a8c97e7e3274238b49730c67ccd00788e595f0eba40180eec57f99a4517ae4"
+    #> [1] "040b4d54fe17ef34b0d748b59776a3832624638aa9c0e034c76fad5806a106291e"
     #> 
     #> [[5]]
-    #> [1] "059c4f5b34f94be294ad229f4ce48592245d9a88a331cbded37487f4d24a1ec7ef"
+    #> [1] "05119df12ae2bf97b2a3f8e47c575deede65064381c236db6ee0c3d55dec1ffed4"
     #> 
     #> [[6]]
-    #> [1] "0695e1f39319dab70e4e7d76e756f2a27ab5887e55d647a62c227433c026257542"
+    #> [1] "0622e7bba716dba49fd70e407fc6047e5aee39d5879f5435e6e2b14a93f886c1df"
 
 ``` r
-# Reassemble original key from any 3 keyshares
-combine_keyshares(shares[c(1, 2, 3)])
-```
-
-    #> [1] "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
-
-``` r
+# Any 3 members of the group can re-combine their keyshares to re-create the key
 combine_keyshares(shares[c(6, 1, 4)])
 ```
 
-    #> [1] "337ca9406391140208844c76b536c111f44531adef8d5cebcc68f83ab43cc745"
-
-## Cryptographic Hash `blake2b()` and `blake2b_raw()`
-
-    BLAKE2 is a cryptographic hash function based on BLAKE, created by 
-    Jean-Philippe Aumasson, Samuel Neves, Zooko Wilcox-O'Hearn, and Christian 
-    Winnerlein. The design goal was to replace the widely used, but broken, 
-    MD5 and SHA-1 algorithms in applications requiring high performance in software
-
-For more on why you might want a cryptographic hash vs a regular hash,
-see [wikipedia article on cryptographic hash
-functions](https://en.wikipedia.org/wiki/Cryptographic_hash_function).
-
-``` r
-# Hash of any R object using R's serialization mechanism
-blake2b(mtcars)
-```
-
-    #> [1] "c848f0df5ceeaa64f86d9e73a5e3d26dd6f9169f83e0ee499bba612df0aa2985"
-
-``` r
-# Hash of raw vectors and strings directly
-blake2b_raw(as.raw(1:20))
-```
-
-    #> [1] "877a567036d56c98c42ea9a05d739b5537423d24411579286fd93816d5e296c7"
-
-``` r
-blake2b_raw("hello")
-```
-
-    #> [1] "324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf"
-
-# Additional data
-
-**Note:** This is an advanced topic, and not essential for regular use
-of the encryption tools in this package.
-
-This package uses [‘Authenticated Encryption with Additional Data
-(AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
-to encrypt messages.
-
-Additional data (or ‘associated data’) may be included in the encryption
-process. This additional data is part of the message authentication, but
-not part of the encrypted message.
-
-A common way additional data is used is for encrypted data which has an
-unencrypted header containing meta-information. This header must be
-readable before the message is decrypted, but also must not allow
-tampering.
-
-An example of the use of *additional data* is addressing an encrypted
-message to a particular recipient.
-
-The address on the envelope must be readable to allow delivery, but the
-message inside needs to remain confidential.
-
-In this case, the *address* is the *additional data* - it is sent with
-the data, but not encrypted. Because the address forms part of the
-message authentication, any modification of the address will prevent the
-authentication of the encrypted payload.
-
-**In the following example**, a message for Judy is encrypted, and the
-address on the envelope is used as the *additional data*.
-
-``` r
-# Using additional data to encrypt a message
-key      <- argon2("my secret key2")
-message  <- 'Meet me in St Louis'
-address  <- 'To: Judy'
-enc      <- encrypt(message, key, additional_data = address)
-
-# Package the additional data and deliver to recipient
-letter <- list(address = address, message = enc)
-letter
-```
-
-    #> $address
-    #> [1] "To: Judy"
-    #> 
-    #> $message
-    #>  [1] 25 e9 44 d3 d0 d7 76 c5 fc 7c bf b0 90 9b fa 4c 53 1f 3b fd 07 32 76 df 13
-    #> [26] 00 00 00 00 00 00 00 77 68 99 98 6d 0c 53 1c 90 8f ee 4f 3d 7a 5e 4e 8c 31
-    #> [51] 40 86 03 e9 90 fd f5 aa f0 ab 2f 36 18 89 c7 29 ac
-
-``` r
-# Recipient decodes message, and the 'address' forms part of the decryption.
-decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
-```
-
-    #> [1] "Meet me in St Louis"
-
-If a malicious third-party tampers with the address, then the message
-cannot be authenticated. E.g. if the letter is altered as if it were
-being sent to “Sandra”, then decryption will fail:
-
-``` r
-letter$address <- "To: Sandra"
-decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
-```
-
-    #> Error in decrypt(letter$message, key = key, type = "string", additional_data = letter$address): decrypt_(): Decryption failed
+    #> [1] "2d465fc9f8e116425a3003c8e8edfeb490a14116099f0b3e78b830bb32e38da4"
 
 # Technical Notes
 

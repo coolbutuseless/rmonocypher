@@ -59,11 +59,11 @@
 #' authenticated encryption with additional data. This algorithm combines
 #' the ChaCha20 stream cipher with the Poly1305 message authentication code.
 #' 
-#' @return \code{encrypt()} returns a raw vector containing the \emph{nonce},
+#' @return \code{encrypt_raw()} returns a raw vector containing the \emph{nonce},
 #'         \emph{mac}, \emph{size of the encrypted data}, and the encrypted
 #'         data itself.
 #'         
-#'         \code{decrypt()} returns the decrypted data as a raw vector or
+#'         \code{decrypt_raw()} returns the decrypted data as a raw vector or
 #'         string depending upon the \code{type} argument.
 #'         
 #' @export
@@ -78,20 +78,20 @@
 #' key
 #' 
 #' # Encrypt the data
-#' enc <- encrypt(dat, key)
+#' enc <- encrypt_raw(dat, key)
 #' enc
 #' 
 #' # Using the same key, decrypt the data as bytes
-#' decrypt(enc, key)
+#' decrypt_raw(enc, key)
 #' # Decrypt as a string
-#' decrypt(enc, key, type = 'string')
+#' decrypt_raw(enc, key, type = 'string')
 #' 
 #' # The following is an advanced feature
 #' # Using additional data to encrypt a message
 #' key      <- argon2("my secret key")
 #' message  <- 'Meet me in St Louis'
 #' envelope <- 'To: Judy'
-#' enc      <- encrypt(message, key, additional_data = envelope)
+#' enc      <- encrypt_raw(message, key, additional_data = envelope)
 #' 
 #' # Package the additional data and deliver to recipient
 #' letter <- list(envelope = envelope, contents = enc)
@@ -99,17 +99,17 @@
 #' 
 #' # Recipient decodes message. If envelope or contents are tampered with, 
 #' # the message decryption will fail.
-#' decrypt(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
+#' decrypt_raw(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-encrypt <- function(x, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
+encrypt_raw <- function(x, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
   .Call(encrypt_, x, key, additional_data)
 }
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' @rdname encrypt
+#' @rdname encrypt_raw
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-decrypt <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), type = 'raw', additional_data = NULL) {
+decrypt_raw <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), type = 'raw', additional_data = NULL) {
   .Call(decrypt_, src, key, type, additional_data)
 }

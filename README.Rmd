@@ -45,27 +45,10 @@ based on the [`monocypher`](https://monocypher.org/) library.
 * General-purpose cryptographic hashing using ['blake2b'](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2) hash function
 * Read/write encrypted objects to file
 
-#### Motivating example
-
-Use `{rmonocypher}` to write R data to an encrypted file on a shared drive, 
-dropbox or cloud.  
-
-The data is not readable by others, but easily recoverable if the `key` is known.
-
-```{r eval=FALSE}
-saveRDS(results, cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
-
-readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
-```
-
 
 ## What's in the box
 
-* `cryptfile()` is a connection for reading/writing encrypted data.  
-    * This connection automatically encrypts/decrypts data to file and can be used in any 
-      function which supports connections 
-      e.g. `saveRDS()`, `write.csv()`, `png::writePNG()` etc
-* `encrypt()` and `decrypt()` are for encrypting and decrypting raw vectors
+* `encrypt_raw()` and `decrypt_raw()` are for encrypting and decrypting raw vectors
   and strings
 * `argon2()` derives encryption keys from pass-phrases
 * `create_public_key()` and `create_shared_key()` can be used to perform key 
@@ -76,7 +59,7 @@ readRDS(cryptfile("ShareDrive/results.rds", key = "#RsTaTs123!"))
   shares to a group using *Shamir's Secret Sharing* algorithm
 * `blake2b()` for hashing any R object
 * `blake2b_raw()` for hashing raw bytes and strings directly
-* `encrypt_obj()` and `decrypt_obj()` for saving encrypted objects to file
+* `encrypt()` and `decrypt()` for saving encrypted objects to file
 
 ## Included Source Code 
 
@@ -101,98 +84,184 @@ To install `rmonocypher` from [GitHub](https://github.com/coolbutuseless/rmonocy
 devtools::install_github("coolbutuseless/rmonocypher")
 ```
 
-# Saving encrypted objects to file
+## Save data to an encrypted file using a pass-phrase to access
+
+* Data cannot be decrypted without the key
+* Safe to save to shared folders
+
+```{r eval = FALSE}
+encrypt(mydata, filename = "SharedDrive/mydata.rds", key = "mykey")
+decrypt(        filename = "SharedDrive/mydata.rds", key = "mykey")
+```
+
+
+## Create an encryption key from a pass-phrase
 
 ```{r}
-file <- tempfile()
-encrypt_obj(head(mtcars), filename = file, key = "mykey")
-decrypt_obj(filename = file, key = "mykey")
+key <- argon2("horse battery stapler")
+key
 ```
 
 
-
-# Using the `cryptfile()` connection
-
-Any function which supports reading/writing with a connection, now supports 
-automatic encryption/decryption using the `cryptfile()` connection in this package.
-
-Many R functions support connections e.g. `read.csv()`, `saveRDS()`, 
-`serialize()`, `png::writePNG()`, and these can all seamlessly use the `cryptfile()` connection.
-
-The output can only be recovered using the same `key` which was 
-used for encryption.
-
-```{r}
-robj <- head(mtcars)
-path <- tempfile()
-key  <- argon2("my secret")
-saveRDS(robj, cryptfile(path, key))
-
-readRDS(cryptfile(path, key))
-```
-
-Attempting to use an incorrect key will not work:
-
-```{r, error=TRUE}
-readRDS(cryptfile(path, "wrong key"))
-```
-
-Attempting to read the file without decrypting it will not work:
-
-```{r, error = TRUE}
-readRDS(path)
-```
-
-### More examples using `cryptfile()` connection
+## Save data to an encrypted file using an encryption key
 
 ```{r eval=FALSE}
-# Saving R objects
-saveRDS(robj, cryptfile(path, key))
-readRDS(cryptfile(path, key))
+# Create a key
+key <- argon2("horse battery stapler")
 
-# CSV files
-write.csv(iris, cryptfile(path, key))
-read.csv(cryptfile(path, key))
+encrypt(mydata, filename = "SharedDrive/mydata.rds", key = key)
+decrypt(        filename = "SharedDrive/mydata.rds", key = key)
+```
 
-# PNG files
-png::writePNG(image, cryptfile(path, key))
-png::readPNG(cryptfile(path, key))
 
-# sink()
-sink(cryptfile(path, key))
-...
-sink()
+## Save data to an encrypted file using encryption key set in via `options()`
 
-# Text
-writeLines(my_diary, cryptfile(path, key))
-readLines(cryptfile(path, key))
+```{r eval=FALSE} 
+# Create a key and set via options() 
+key <- argon2("horse battery stapler")
+options(MONOCYPHER_KEY = key)
 
-# cat()
-cat(data, cryptfile(path, key))
+
+encrypt(mydata, filename = "SharedDrive/mydata.rds")
+decrypt(        filename = "SharedDrive/mydata.rds")
 ```
 
 
 
-# Simple encrypt/decrypt of raw data and strings
+## Create some truly random bytes
 
-`encrypt()` and `decrypt()` are functions for directly encrypting 
-strings and raw vectors
+Using your OS built-in cryptographic pseudorandom number generator.
 
 ```{r}
-library(rmonocypher)
-
-# Plain text. Can be string or raw bytes
-dat <- "Hello #RStats"
-
-# Encrypt 
-enc <- encrypt(dat, key = "my secret")
-
-# the encrypted data
-enc
-
-# Decrypt using the same key
-decrypt(enc, key = "my secret", type = 'string')
+rcrypto(n = 16)
+rcrypto(n = 16, type = 'raw')
 ```
+
+
+## Create a cryptographic hash of your data
+
+```{r}
+blake2b(mtcars)
+```
+
+
+
+## Securely exchange keys over insecure channels with public key encryption.
+
+#### You: create a secret and public key
+
+```{r}
+# You: Create a secret key and a public key.
+your_secret <- argon2("hello")
+your_public <- create_public_key(your_secret)
+```
+
+#### They: create a secret and public key
+
+```{r}
+# They: Create a secret key and a public key
+their_secret <- argon2("goodbye")
+their_public <- create_public_key(their_secret)
+```
+
+#### Swap public keys
+
+These can be swapped in the open (e.g. via email) 
+
+#### You: Create a shared key
+
+```{r}
+# You: Use their public key and your secret key
+#      to derive the common shared key
+create_shared_key(their_public, your_secret)
+```
+
+#### They: Create the same shared key
+
+```{r}
+# They: Use your public key and their secret key
+#       to derive the same shared key!
+create_shared_key(your_public, their_secret)
+```
+
+
+## Split an encryption key into `n` parts with only `k` keyshares needed to decode
+
+```{r}
+key <- argon2("horse battery stapler")
+key
+# Split the key into 6 keyshares. Any 3 keyshares can re-construct.
+shares <- create_keyshares(key, n = 6, k = 3)
+# Distribute these shares to your group
+shares
+# Any 3 members of the group can re-combine their keyshares to re-create the key
+combine_keyshares(shares[c(6, 1, 4)])
+```
+
+
+
+# Technical Notes
+
+* The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
+  counter/ratcheting mechanisms do not need to be used, and random bytes are 
+  unlikely to generate the same nonce twice in any reasonable timeframe.
+* The nonce is created internally using random bytes from the cryptographic random number
+  generator from the system this is running on.
+* There are no magic bytes pre-pended to the data to identify it as encrypted, 
+  but the `payload size` field in the file structure is easily identifiable 
+  (see below).
+* In general when encrypting data using Authenticated Encryption:
+    * these should be kept secret:
+        * the original data (obviously!)
+        * the encryption key.
+    * these elements do not need to be kept secret:
+        * MAC - message authentication code
+        * Number of bytes of data
+        * Nonce
+        * Salt (if `argon2()` is being used to derive `key` from a pass-phrase)
+
+
+### File structure
+
+The file structure for encrypted data created by this package is documented here.
+
+The file must hold multiple chunks of streaming encrypted data, each chunk
+has a header giving the number of encrypted bytes (payload size) and a MAC (Message Authentication Code).   The `nonce` is stored once at the beginning of the file.
+
+
+* `[nonce] [frame] [frame] ... [frame]`
+    * `[nonce]` = 24 bytes
+    * `[frame]` = `[payload size] [mac] [payload]`
+        * `[payload size]` = 8 bytes
+        * `[mac]` = 16 bytes
+        * `[payload]` is a sequence of `payload size` bytes
+
+### Built-in libraries
+
+This package uses the [monocypher](https://monocypher.org) encryption library
+v4.0.2 to provide 'authenticated encryption with additional data' (AEAD) 
+and Argon2 password-based key derivation.
+
+Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
+code.
+
+
+
+
+```{r echo = FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
+
+
+
+
+
+
 
 # Encryption keys
 
@@ -397,14 +466,14 @@ on the envelope is used as the *additional data*.
 key      <- argon2("my secret key2")
 message  <- 'Meet me in St Louis'
 address  <- 'To: Judy'
-enc      <- encrypt(message, key, additional_data = address)
+enc      <- encrypt_raw(message, key, additional_data = address)
 
 # Package the additional data and deliver to recipient
 letter <- list(address = address, message = enc)
 letter
 
 # Recipient decodes message, and the 'address' forms part of the decryption.
-decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt_raw(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
 If a malicious third-party tampers with the address, then the message cannot
@@ -413,53 +482,6 @@ to "Sandra", then decryption will fail:
 
 ```{r error = TRUE}
 letter$address <- "To: Sandra"
-decrypt(letter$message, key = key, type = 'string', additional_data = letter$address)
+decrypt_raw(letter$message, key = key, type = 'string', additional_data = letter$address)
 ```
 
-
-
-
-# Technical Notes
-
-* The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
-  counter/ratcheting mechanisms do not need to be used, and random bytes are 
-  unlikely to generate the same nonce twice in any reasonable timeframe.
-* The nonce is created internally using random bytes from the cryptographic random number
-  generator from the system this is running on.
-* There are no magic bytes pre-pended to the data to identify it as encrypted, 
-  but the `payload size` field in the file structure is easily identifiable 
-  (see below).
-* In general when encrypting data using Authenticated Encryption:
-    * these should be kept secret:
-        * the original data (obviously!)
-        * the encryption key.
-    * these elements do not need to be kept secret:
-        * MAC - message authentication code
-        * Number of bytes of data
-        * Nonce
-        * Salt (if `argon2()` is being used to derive `key` from a pass-phrase)
-
-
-### File structure
-
-The file structure for encrypted data created by this package is documented here.
-
-The file must hold multiple chunks of streaming encrypted data, each chunk
-has a header giving the number of encrypted bytes (payload size) and a MAC (Message Authentication Code).   The `nonce` is stored once at the beginning of the file.
-
-
-* `[nonce] [frame] [frame] ... [frame]`
-    * `[nonce]` = 24 bytes
-    * `[frame]` = `[payload size] [mac] [payload]`
-        * `[payload size]` = 8 bytes
-        * `[mac]` = 16 bytes
-        * `[payload]` is a sequence of `payload size` bytes
-
-### Built-in libraries
-
-This package uses the [monocypher](https://monocypher.org) encryption library
-v4.0.2 to provide 'authenticated encryption with additional data' (AEAD) 
-and Argon2 password-based key derivation.
-
-Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
-code.

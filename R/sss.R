@@ -3,7 +3,7 @@
 #' Create keyshares for sharing a secret with a group using Shamir's Secret
 #' Sharing algorithm
 #' 
-#' @inheritParams encrypt
+#' @inheritParams encrypt_raw
 #' @param n total number of shares to create
 #' @param k number of shares needed to recreate key. Must be less than or 
 #'        equal to \code{n}

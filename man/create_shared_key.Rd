@@ -23,8 +23,7 @@ Possible values 'string' or 'raw'}
 }
 \value{
 \code{create_public_key()} returns a public key from a secret key.
-        \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt()} and
-        \code{cryptfile()}
+        \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt_raw()}
 }
 \description{
 These functions implement public-key cryptography using x25519. 

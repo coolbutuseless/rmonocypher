@@ -1,8 +1,13 @@
 
+# rmonocypher 0.1.7  2024-05-08
+
+* Remove `cryptfile()`
+* Rename `encrypt()` to `encrypt_raw()`
+* Rename `encrypt_obj()` to `encrypt()`
 
 # rmonocypher 0.1.6  2024-05-07
 
-* `encrypt_obj()` to serialize encrypted objects to file
+* `encrypt()` to serialize encrypted objects to file
 
 # rmonocypher 0.1.5  2024-05-07
 

@@ -31,8 +31,7 @@
 #'        is given, a 32-byte key is derived using the Argon2 algorithm.
 #' 
 #' @return \code{create_public_key()} returns a public key from a secret key.
-#'         \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt()} and
-#'         \code{cryptfile()}
+#'         \code{create_shared_key()} returns a shared encryption key to use with \code{encrypt_raw()}
 #' 
 #' @export
 #' @examples

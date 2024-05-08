@@ -79,14 +79,14 @@ int decrypt_frame2(unserialize_buffer_t *cstate) {
     return 0; // EOF
   }
   if (bytes_read != LENGTHSIZE) { 
-    Rprintf("decrypt_frame(): Possible End of file? EOF:%i\n", feof(cstate->fp));
-    error("decrypt_frame_(): Rrror reading payload size (EOF: %i) %lu/%zu", feof(cstate->fp), bytes_read, LENGTHSIZE); 
+    Rprintf("decrypt_frame2(): Possible End of file? EOF:%i\n", feof(cstate->fp));
+    error("decrypt_frame2(): Rrror reading payload size (EOF: %i) %lu/%zu", feof(cstate->fp), bytes_read, LENGTHSIZE); 
   }
   
   bytes_read = fread(cstate->mac, 1, MACSIZE, cstate->fp);
 
   if (bytes_read != MACSIZE) { 
-    error("decrypt_frame_(): Error reading MAC"); 
+    error("decrypt_frame2(): Error reading MAC"); 
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +99,7 @@ int decrypt_frame2(unserialize_buffer_t *cstate) {
   
   bytes_read = fread(cstate->buf, 1, cstate->payload_size, cstate->fp);
   if (bytes_read != cstate->payload_size) { 
-    error("cryptfile_open(): Error reading payload %lu/%zu", bytes_read, cstate->payload_size); 
+    error("decrypt_frame2(): Error reading payload %lu/%zu", bytes_read, cstate->payload_size); 
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,7 +127,7 @@ int decrypt_frame2(unserialize_buffer_t *cstate) {
   // Was the message decrypted and authenticated?
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if (res < 0) {
-    error("decrypt_frame_(): Decryption failed");
+    error("decrypt_frame2(): Decryption failed");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

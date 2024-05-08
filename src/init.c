@@ -2,8 +2,6 @@
 #include <R.h>
 #include <Rinternals.h>
 
-extern SEXP cryptfile_(SEXP description_, SEXP key_, SEXP mode_, SEXP additional_data_, SEXP verbosity_);
-
 extern SEXP encrypt_(SEXP x_  , SEXP key_,             SEXP additional_data_);
 extern SEXP decrypt_(SEXP src_, SEXP key_, SEXP type_, SEXP additional_data_);
 
@@ -27,8 +25,6 @@ SEXP unserialize_(           SEXP filename_, SEXP key_);
 // .Call   R_CallMethodDef
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 static const R_CallMethodDef CEntries[] = {
-  
-  {"cryptfile_", (DL_FUNC) &cryptfile_, 5},
   
   {"encrypt_", (DL_FUNC) &encrypt_, 3},
   {"decrypt_", (DL_FUNC) &decrypt_, 4},
