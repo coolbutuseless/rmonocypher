@@ -1,19 +1,11 @@
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-
 #include <R.h>
 #include <Rinternals.h>
 #include <Rdefines.h>
-#include <R_ext/Connections.h>
-
-#if ! defined(R_CONNECTIONS_VERSION) || R_CONNECTIONS_VERSION != 1
-#error "Unsupported connections API version"
-#endif
-
 
 #include "monocypher.h"
 #include "utils.h"

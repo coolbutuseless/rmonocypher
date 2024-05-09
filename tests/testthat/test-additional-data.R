@@ -15,14 +15,6 @@ test_that("encrypt additional data works", {
   tst <- decrypt_raw(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
   expect_identical(message, tst)
   
-  
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # Connections aren't closed when an error occurs here.
-  # Instead, we have to wait for gc() to close unused connections.
-  # But when testing this just leads to ugly notifcation/warning messages
-  # Only run local
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  testthat::skip_on_cran()
   # Bad key
   expect_error(
     tst <- decrypt_raw(letter$contents, key = "wrong", type = 'string', additional_data = letter$envelope)
