@@ -10,8 +10,17 @@
 
 `{rmonocypher}` provides easy-to-use tools for encrypting data in R.
 
-These tools are backed by the cryptographic library
-[`monocypher`](https://monocypher.org/).
+These tools are backed by the [`monocypher`](https://monocypher.org/)
+cryptographic library.
+
+The key encryption technique in this package is
+[XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+which is the [extended
+nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
+variant of the ChaCha20-Poly1305 technique used in
+[IPsec](https://en.wikipedia.org/wiki/IPsec),
+[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and
+[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
 
 #### Features
 
@@ -231,7 +240,7 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rcrypto(16))
 ```
 
-    #> [1] "76e1b205b60f75ae3a1987efdec18fd9f0ee14128842ea49e80fa0d1f52ce749"
+    #> [1] "36dc5ec0315e3cddaddf4d45f6a725ea8542c5b0354e77ddd13cd60aff866958"
 
 </details>
 
@@ -243,7 +252,7 @@ These are possibly the best random bytes your OS provides.
 rcrypto(n = 16)
 ```
 
-    #> [1] "3f8408810bdc72c8772b92236f82ca64"
+    #> [1] "4115a022399712a17c7f62c683d36e59"
 
 <details>
 <summary style="font-size:large">
@@ -276,7 +285,7 @@ cryptographic purposes e.g.
 rcrypto(n = 16, type = 'raw')
 ```
 
-    #>  [1] 51 e8 d2 1b 0c 7b 92 a6 37 03 30 e4 0a 9d 2e 35
+    #>  [1] 63 83 bb f2 c2 0a 5a 7f 76 36 cb 19 12 57 21 21
 
 </details>
 
@@ -388,22 +397,22 @@ shares
 ```
 
     #> [[1]]
-    #> [1] "01fa054bd808b3fcd0b9eebe2dbfa421654c8815fa8456c7413be14101fd566cf3"
+    #> [1] "01cb12805186de41528cec6829f186d9473dce29bc89d0edc5750f9d7df32706b6"
     #> 
     #> [[2]]
-    #> [1] "020cfa22be7a4ff2eaecc582a400664a175bb632f50b78b3f04943997868106c7d"
+    #> [1] "0285820ddfe7c19383446817bde84f0ca57ff71b7b7957860a14f82609569db3b4"
     #> 
     #> [[3]]
-    #> [1] "03dbb936af8a1d18780f1b3f41572f95c6879f661986b17f8f0a1ae8c2a7a58d2a"
+    #> [1] "0363d6d24799fec49392b47c5cf1242b56d29873d1f91860f1194f8bcf975938a6"
     #> 
     #> [[4]]
-    #> [1] "0409cdea68188e69639a92b7d22084c981a680e64b01e98c79f06a4ea0d720b4ca"
+    #> [1] "04817e0a1167c2ab72f4410ea42079c70bdb1beb445e57791f63ec5b5023863d54"
     #> 
     #> [[5]]
-    #> [1] "05de8efe79e8dc83f1794c0a3777cd16507aa9b2a78c204006b3333f1a1895559d"
+    #> [1] "05672ad58919fdfc62229d65453912e0f8767483eede189fe46e5bf696e242b646"
     #> 
     #> [[6]]
-    #> [1] "062871971f9a208dcb2c6736bec80f7d226d9795a8030e34b7c191e7638dd35513"
+    #> [1] "0629ba580778e22eb3ea191ad120db351a344db1292e9ff42b0fac4de247f80344"
 
 ``` r
 # Any 3 members of the group can re-combine their keyshares to re-create the key
@@ -498,3 +507,31 @@ The package relies on the cryptographic algorithms supplied by
 
 Shamir’s Secret Sharing uses Daan Sprenkel’s
 [sss](https://github.com/dsprenkels/sss) code.
+
+### Decoding in other programs/languages
+
+The encryption technique used through this package is the
+XChaCha20-Poly1305 - this uses an extended 24-byte nonce.
+
+This may be decoded by any program/language which implements this
+technique i.e.
+
+- The `standalone-decrypt.c` code included with this package
+- The Rust Language
+  `https://docs.rs/chacha20poly1305/latest/chacha20poly1305/`
+
+C sourcecode for decoding outside of R is included in the installed
+directory of this package in the file `standalone-decrypt.c`.
+
+To find it, see the source tarball on CRAN or github, or when the
+package is installed in R, find its location using
+
+``` r
+system.file("standalone-decrypt.c", package = 'rmonocypher', mustWork = TRUE)
+```
+
+This file must be compiled with the `monocypher.c/h` source files from
+[`monocypher`](https://monocypher.org/)
+
+    gcc -Wall standalone-decrypt.c monocypher.c -o decrypt
+    ./decrypt [filename] [hexadecimal_key] [outfile]

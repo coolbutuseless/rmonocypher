@@ -32,7 +32,14 @@ set.seed(1)
 
 `{rmonocypher}` provides easy-to-use tools for encrypting data in R.
 
-These tools are backed by the cryptographic library [`monocypher`](https://monocypher.org/).
+These tools are backed by the [`monocypher`](https://monocypher.org/) cryptographic library.
+
+The key encryption technique in this package is [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) variant of the ChaCha20-Poly1305 technique used in 
+[IPsec](https://en.wikipedia.org/wiki/IPsec), 
+[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and 
+[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
+
 
 #### Features
 
@@ -432,6 +439,36 @@ i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message a
 Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
 code.
 
+### Decoding in other programs/languages
+
+The encryption technique used through this package is the XChaCha20-Poly1305 - 
+this uses an extended 24-byte nonce.
+
+This may be decoded by any program/language which implements this technique i.e.
+
+* The `standalone-decrypt.c` code included with this package
+* The Rust Language `https://docs.rs/chacha20poly1305/latest/chacha20poly1305/`
+
+
+C sourcecode for decoding outside of R is included in the installed directory
+of this package in the file `standalone-decrypt.c`.  
+
+To find it, see the source tarball on CRAN or github, or
+when the package is installed in R, find its location using
+
+```{r eval=FALSE}
+system.file("standalone-decrypt.c", package = 'rmonocypher', mustWork = TRUE)
+```
+
+
+This file must be compiled with the `monocypher.c/h` source files from [`monocypher`](https://monocypher.org/)
+
+```
+gcc -Wall standalone-decrypt.c monocypher.c -o decrypt
+./decrypt [filename] [hexadecimal_key] [outfile]
+```
+
+
 
 ```{r echo = FALSE}
 knitr::knit_exit()
@@ -445,6 +482,22 @@ knitr::knit_exit()
 
 
 
+
+
+### Decoding with `{sodium}`
+
+```{r}
+key <- argon2("mykey", type = 'raw')
+msg <- "Do you want to build a snowman?"
+enc <- encrypt_raw(msg, key = key)
+
+nonce <- enc[1:24]           # 24 byte nonce
+payload_size <- enc[25:32]   # 8 bytes
+payload_size <- readBin(payload_size, integer(), 1)
+data  <- enc[33:length(enc)] # encrypted data
+
+bytestream <- sodium::chacha20(payload_size, key, nonce)
+```
 
 
 
