@@ -21,6 +21,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.1
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Depends:
     R (>= 3.4.0)
@@ -30,3 +32,4 @@ Copyright: This package includes the 'monocypher' library written by Loup Vailla
     This package includes code written and copyright Daan Sprenkels. See file
     'inst/LICENSE-sss.md' for the license for this included code.
 Config/testthat/edition: 3
+VignetteBuilder: knitr

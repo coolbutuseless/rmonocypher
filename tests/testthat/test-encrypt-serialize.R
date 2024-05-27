@@ -7,8 +7,8 @@ test_that("encrypted serialization works", {
   filename <- tempfile()
   robj <- mtcars
 
-  encrypt(robj = robj, filename = filename, key = key)
-  dec <- decrypt(filename = filename, key = key)
+  encrypt(robj = robj, dst = filename, key = key)
+  dec <- decrypt(src = filename, key = key)
 
   expect_identical(dec, robj)
 
@@ -31,9 +31,9 @@ test_that("encrypted serialization of large object works", {
   robj <- mtcars[sample(nrow(mtcars), 5000, T), ]
 
 
-  encrypt(robj = robj, filename = filename, key = key)
+  encrypt(robj = robj, dst = filename, key = key)
   dec <- NULL
-  dec <- decrypt(filename = filename, key = key)
+  dec <- decrypt(src = filename, key = key)
 
   expect_identical(dec, robj)
 

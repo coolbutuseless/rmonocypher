@@ -7,7 +7,7 @@
 #'        Note: if the entropy pool is exhausted on your
 #'        system it may not be able to provide the requested number of bytes -
 #'        in this case an error is thrown.
-#' @param type Type of returned values - 'raw' or 'string'. Default: 'string'.
+#' @param type Type of returned values - 'raw' or "chr". Default: "chr".
 #' 
 #' @section Platform notes:
 #' The method used for generating random values varies depending on the 
@@ -26,9 +26,9 @@
 #' 
 #' @export
 #' @examples
-#' rcrypto(16, type = 'string')
-#' rcrypto(16, type = 'raw')
+#' rbyte(16, type = "chr")
+#' rbyte(16, type = 'raw')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rcrypto <- function(n, type = 'string') {
+rbyte <- function(n, type = "chr") {
   .Call(rcrypto_, n, type)
 }

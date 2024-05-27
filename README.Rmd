@@ -24,15 +24,13 @@ library(rmonocypher)
 set.seed(1)
 ```
 
-# `{rmonocypher}`: Easy-to-use encryption tools for R
+# Read/Write Encrypted Data
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`{rmonocypher}` provides easy-to-use tools for encrypting data in R.
-
-These tools are backed by the [`monocypher`](https://monocypher.org/) cryptographic library.
+`{rmonocypher}` provides an easy-to-use tool for encrypting/decrypting data with R.
 
 The key encryption technique in this package is [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
 which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) variant of the ChaCha20-Poly1305 technique used in 
@@ -40,32 +38,15 @@ which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XC
 [SSH](https://en.wikipedia.org/wiki/Secure_Shell) and 
 [Wireguard](https://en.wikipedia.org/wiki/WireGuard).
 
+This package is backed by the cryptographic primitives provided by the [`monocypher`](https://monocypher.org/) library.
 
-#### Features
-
-* Simple reading/writing of encrypted data to file
-* Generate encryption keys from easier-to-remember pass-phrases
-* A secure source of random bytes generated from the operating system's entropy sources
-* General-purpose cryptographic hashing
-* Key sharing using *Shamir's Secret Sharing* 
-* Public Key Cryptography to negotiate a shared key over insecure channels
 
 ## What's in the box
 
 * `encrypt()` and `decrypt()` for reading/writing encrypted R objects to file
 * `argon2()` derives encryption keys from pass-phrases
-* `rcrypto()` generates random bytes using the 
-  operating system'ss cryptographically secure pseudo-random number generator.
-* `blake2b()` for calculating a cryptographic hash of any R object
-    * `blake2b_raw()` is a low-level variant for  calculating cryptographics
-       hashes for raw bytes and strings directly
-* `create_public_key()` and `create_shared_key()` for performing key 
-  exchange over an insecure channel (i.e. Public Key Cryptography)
-* `create_keyshares()` and `combine_keyshares()` for splitting an encryptiong key 
-  into `n` keyshares, but requiring only `k` keyshares to reconstruct
-  (uses *Shamir's Secret Sharing* algorithm)
-* `encrypt_raw()` and `decrypt_raw()` are for low-level encryption of raw vectors
-  and strings
+* `rbyte()` generates random bytes using your 
+  operating system's cryptographically secure pseudo-random number generator.
   
 
 ## Installation
@@ -83,8 +64,8 @@ devtools::install_github("coolbutuseless/rmonocypher")
 * Safe to save to shared folders
 
 ```{r eval = FALSE}
-encrypt(mydata, filename = "SharedDrive/mydata.rds", key = "mykey")
-decrypt(        filename = "SharedDrive/mydata.rds", key = "mykey")
+encrypt(mydata, dst = "SharedDrive/mydata.rds", key = "mykey")
+decrypt(        src = "SharedDrive/mydata.rds", key = "mykey")
 ```
 
 
@@ -101,7 +82,7 @@ decrypt(        filename = "SharedDrive/mydata.rds", key = "mykey")
 * `encrypt()` understands any data understood by `saveRDS()`
 * Encryption follows RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
 i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message authentication code.
-* The 24-byte nonce is derived internally using 24 random bytes from `rcrypto()`
+* The 24-byte nonce is derived internally using 24 random bytes from `rbyte()`
 
 </details>
 
@@ -113,8 +94,8 @@ i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message a
 # Create an encryption key from your secret pass-phrase
 key <- argon2("horse battery stapler")
 
-encrypt(mydata, filename = "SharedDrive/mydata.rds", key = key)
-decrypt(        filename = "SharedDrive/mydata.rds", key = key)
+encrypt(mydata, dst = "SharedDrive/mydata.rds", key = key)
+decrypt(        src = "SharedDrive/mydata.rds", key = key)
 ```
 </details>
 
@@ -128,8 +109,8 @@ key <- argon2("horse battery stapler")
 options(MONOCYPHER_KEY = key)
 
 
-encrypt(mydata, filename = "SharedDrive/mydata.rds")
-decrypt(        filename = "SharedDrive/mydata.rds")
+encrypt(mydata, dst = "SharedDrive/mydata.rds")
+decrypt(        src = "SharedDrive/mydata.rds")
 ```
 </details>
 
@@ -138,6 +119,8 @@ decrypt(        filename = "SharedDrive/mydata.rds")
 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
 ## Create an encryption key from a pass-phrase
+
+The encrypted data is only as safe as your pass-phrase, so make it a good one!
 
 ```{r}
 key <- argon2("horse battery stapler")
@@ -151,15 +134,12 @@ key
 <summary style="font-size:large;">Technical Notes (click to expand)</summary>
 Argon2 is a resource intensive password-based key derivation scheme.
 
-Use `argon2()` to generate random bytes for keys from a pass-phrase.  It is 
-recommended to further defend against attackers (who may be using rainbow tables) by 
-providing extra bytes of `salt`.
+Use `argon2()` to generate random bytes for keys from a pass-phrase. 
 
 If no explicit `salt` is provided, a salt will be derived internally from 
 the pass-phrase.  This is deterministic such that the same pass-phase
-will always generate the same key.  This is convenient, but not as
-secure as using another pass-phrase for the `salt`. For maximum strength, use 
-a sequence of random bytes generated by `rcyprto()`
+will always generate the same key.  This is convenient if expecting to face
+a sophisticated, concerted attacker using rainbow tables, then use a random salt generated by `rbyte(16)`
 
 </details>
 
@@ -178,7 +158,7 @@ The `key` for encryption may be one of:
 
 The `key` may be created by:
 
-* Using random bytes from a cryptographically secure source e.g. `rcrypto()`
+* Using random bytes from a cryptographically secure source e.g. `rbyte()`
 * Using Argon2 to derive random bytes from a pass-phrase i.e. `argon2()`
 * Creating a shared key through key exchange with another person
 
@@ -189,11 +169,9 @@ globally for the current session using `options(MONOCYPHER_KEY = "...")`
 ## Using random bytes as a key
 
 ```{r}
-# Random raw bytes
-key <- as.raw(sample(0:255, 32, TRUE))
-
-# Random raw bytes from rcrypto()
-key <- rcrypto(32)
+# Random raw bytes generated by rbyte()  ** Recommended **
+# rbyte() is a cryptographically secure pseudo-random number generator
+key <- rbyte(32)
 
 # 64-character hexadecimal string
 key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
@@ -225,169 +203,12 @@ argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
 # Use 16-bytes of random data for the salt
 argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 
-# Use 'rcrypto()' to source 16 random bytes for the salt
-argon2("my secret", salt = rcrypto(16))
+# Use 'rbyte()' to source 16 random bytes for the salt
+argon2("my secret", salt = rbyte(16))
 ```
 </details>
 
 
-
-## Generate cryptographically secure random bytes
-
-These are possibly the best random bytes your OS provides.
-
-```{r}
-rcrypto(n = 16)
-```
-
-<details>
-<summary style="font-size:large"> Technical Details </summary>
-This function generates bytes using your OS built-in cryptographic pseudorandom 
-number generator.
-
-This random number generator is seeded by entropy gathered by your OS such as:
-
-* hardware noise
-* timing jitter
-* network timing
-* mouse movements
-* hard-drive event
-
-This entropy is used to seed a cryptographically secure pseudorandom
-number generator e.g. something based on ChaCha20.
-
-Such a random number generator has important properties for cryptographic 
-purposes e.g.
-
-* knowing the output does not allow you to infer the internal state
-* knowing a large sequence of random bytes does not allow you to infer the 
-  next byte, or calculate prior bytes.
-
-```{r}
-rcrypto(n = 16, type = 'raw')
-```
-
-
-</details>
-
-
-## Calculate a cryptographic hash of your data
-
-```{r}
-blake2b(mtcars)
-```
-
-<details>
-<summary style="font-size: large;">Technical Notes</summary>
-
-    BLAKE2 is a cryptographic hash function based on BLAKE, created by 
-    Jean-Philippe Aumasson, Samuel Neves, Zooko Wilcox-O'Hearn, and Christian 
-    Winnerlein. The design goal was to replace the widely used, but broken, 
-    MD5 and SHA-1 algorithms in applications requiring high performance in software
-
-For more on why you might want a cryptographic hash vs a regular hash, see
-[wikipedia article on cryptographic hash functions](https://en.wikipedia.org/wiki/Cryptographic_hash_function).
-</details>
-
-
-## Securely exchange keys over insecure channels with public key encryption.
-
-#### You: create a secret and public key
-
-```{r}
-# You: Create a secret key and a public key.
-your_secret <- argon2("hello")
-your_public <- create_public_key(your_secret)
-```
-
-#### They: create a secret and public key
-
-```{r}
-# They: Create a secret key and a public key
-their_secret <- argon2("goodbye")
-their_public <- create_public_key(their_secret)
-```
-
-#### Swap public keys
-
-These can be swapped in the open (e.g. via email) 
-
-#### You: Create a shared key
-
-```{r}
-# You: Use their public key and your secret key
-#      to derive the common shared key
-create_shared_key(their_public, your_secret)
-```
-
-#### They: Create the same shared key
-
-```{r}
-# They: Use your public key and their secret key
-#       to derive the same shared key!
-create_shared_key(your_public, their_secret)
-```
-
-<details>
-<summary style="font-size: large;">Technical Notes</summary>
-
-**Note:** This is an advanced topic, and not essential for regular use of 
-encryption when only you are accessing data, or you have a secure way to share
-the key with others.
-
-`{rmonocypher}` implement public-key cryptography using x25519. 
-X25519 is an elliptic curve Diffie-Hellman key exchange using Curve25519. 
-It allows two parties to jointly agree on a shared secret using an insecure channel.
-
-Steps:
-
-1. Both users create a secret key (these are never shared!)
-2. Both users derive the public key from their secret key
-3. Users swap their public keys. These do not need to be kept secure.
-4. Both users use their secret key in conjunction with the other user's
-   public key to derive **the exact same key** !
-5. Now both users know the same shared key and can encrypt and decrypt 
-   messages from each other.
-   
-</details>
-
-## Split an encryption key into `n` parts with only `k` keyshares needed to decode
-
-```{r}
-key <- argon2("horse battery stapler")
-key
-# Split the key into 6 keyshares. Any 3 keyshares can re-construct.
-shares <- create_keyshares(key, n = 6, k = 3)
-# Distribute these shares to your group
-shares
-# Any 3 members of the group can re-combine their keyshares to re-create the key
-combine_keyshares(shares[c(6, 1, 4)])
-```
-
-<details>
-<summary style="font-size: large;">Technical Notes</summary>
-*Shamir's Secret Sharing* algorithm allows a key to be split into multiple parts (*keyshares*)
-and shared.  When splitting the key, the number (`k`) is specified to indicate how
-many keyshares are required to reconstruct the key.  Any individual *keyshare* cannot reveal the key.  See [wikipedia](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing).
-
-#### Application example (from wikipedia)
-
-    A company needs to secure their vault. If a single person knows the 
-    code to the vault, the code might be lost or unavailable when the 
-    vault needs to be opened. If there are several people who know the 
-    code, they may not trust each other to always act honestly.
-
-    SSS can be used in this situation to generate shares of the vault's code
-    which are distributed to authorized individuals in the company. The 
-    minimum threshold and number of shares given to each individual can be 
-    selected such that the vault is accessible only by (groups of) authorized 
-    individuals. If fewer shares than the threshold are presented, the vault
-    cannot be opened.
-
-    By accident, coercion or as an act of opposition, some individuals might 
-    present incorrect information for their shares. If the total of correct 
-    shares fails to meet the minimum threshold, the vault remains locked.
-</details>
 
 
 # General Technical Notes
@@ -397,9 +218,6 @@ many keyshares are required to reconstruct the key.  Any individual *keyshare* c
   unlikely to generate the same nonce twice in any reasonable timeframe.
 * The nonce is created internally using random bytes from the cryptographic random number
   generator from the system this is running on.
-* There are no magic bytes pre-pended to the data to identify it as encrypted, 
-  but the `payload size` field in the file structure is easily identifiable 
-  (see below).
 * In general when encrypting data using Authenticated Encryption:
     * these should be kept secret:
         * the original data (obviously!)
@@ -415,16 +233,10 @@ many keyshares are required to reconstruct the key.  Any individual *keyshare* c
 
 The file structure for encrypted data created by this package is documented here.
 
-The file must hold multiple chunks of streaming encrypted data, each chunk
-has a header giving the number of encrypted bytes (payload size) and a MAC (Message Authentication Code).   The `nonce` is stored once at the beginning of the file.
-
-
-* `[nonce] [frame] [frame] ... [frame]`
+* `[nonce] [mac] [encrypted data]`
     * `[nonce]` = 24 bytes
-    * `[frame]` = `[payload size] [mac] [payload]`
-        * `[payload size]` = 8 bytes
-        * `[mac]` = 16 bytes
-        * `[payload]` is a sequence of `payload size` bytes
+    * `[mac]` = 16 bytes
+    * `[encrypted data]` = remaining bytes
 
 ### Included Cryptographic Libraries 
 
@@ -439,125 +251,5 @@ i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message a
 Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
 code.
 
-### Decoding in other programs/languages
 
-The encryption technique used through this package is the XChaCha20-Poly1305 - 
-this uses an extended 24-byte nonce.
-
-This may be decoded by any program/language which implements this technique i.e.
-
-* The `standalone-decrypt.c` code included with this package
-* The Rust Language `https://docs.rs/chacha20poly1305/latest/chacha20poly1305/`
-
-
-C sourcecode for decoding outside of R is included in the installed directory
-of this package in the file `standalone-decrypt.c`.  
-
-To find it, see the source tarball on CRAN or github, or
-when the package is installed in R, find its location using
-
-```{r eval=FALSE}
-system.file("standalone-decrypt.c", package = 'rmonocypher', mustWork = TRUE)
-```
-
-
-This file must be compiled with the `monocypher.c/h` source files from [`monocypher`](https://monocypher.org/)
-
-```
-gcc -Wall standalone-decrypt.c monocypher.c -o decrypt
-./decrypt [filename] [hexadecimal_key] [outfile]
-```
-
-
-
-```{r echo = FALSE}
-knitr::knit_exit()
-```
-
-
-
-
-
-
-
-
-
-
-
-### Decoding with `{sodium}`
-
-```{r}
-key <- argon2("mykey", type = 'raw')
-msg <- "Do you want to build a snowman?"
-enc <- encrypt_raw(msg, key = key)
-
-nonce <- enc[1:24]           # 24 byte nonce
-payload_size <- enc[25:32]   # 8 bytes
-payload_size <- readBin(payload_size, integer(), 1)
-data  <- enc[33:length(enc)] # encrypted data
-
-bytestream <- sodium::chacha20(payload_size, key, nonce)
-```
-
-
-
-
-
-
-
-
-
-# Additional data
-
-**Note:** This is an advanced topic, and not essential for regular use of the encryption 
-tools in this package.
-
-This package uses ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
-to encrypt messages.
-
-Additional data (or 'associated data') may be included in the encryption
-process. This additional data is part of the message authentication, but 
-not part of the encrypted message.
-
-A common way additional data is used is for encrypted data which has an 
-unencrypted header containing meta-information.  This header must be readable
-before the message is decrypted, but also must not allow tampering.
-
-An example of the use of *additional data* is addressing an encrypted message to a particular
-recipient.
-
-The address on the envelope must be readable to allow delivery, but the message
-inside needs to remain confidential.  
-
-In this case, the *address* is the *additional data* -
-it is sent with the data, but not encrypted.  Because the address forms
-part of the message authentication, any modification of the address will 
-prevent the authentication of the encrypted payload.
-
-**In the following example**, a message for Judy is encrypted, and the address
-on the envelope is used as the *additional data*.
-
-```{r}
-# Using additional data to encrypt a message
-key      <- argon2("my secret key2")
-message  <- 'Meet me in St Louis'
-address  <- 'To: Judy'
-enc      <- encrypt_raw(message, key, additional_data = address)
-
-# Package the additional data and deliver to recipient
-letter <- list(address = address, message = enc)
-letter
-
-# Recipient decodes message, and the 'address' forms part of the decryption.
-decrypt_raw(letter$message, key = key, type = 'string', additional_data = letter$address)
-```
-
-If a malicious third-party tampers with the address, then the message cannot
-be authenticated.  E.g. if the letter is altered as if it were being sent
-to "Sandra", then decryption will fail:
-
-```{r error = TRUE}
-letter$address <- "To: Sandra"
-decrypt_raw(letter$message, key = key, type = 'string', additional_data = letter$address)
-```
 

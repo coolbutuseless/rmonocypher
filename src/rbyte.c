@@ -30,7 +30,7 @@
 //        it may return fewer bytes than expected. This function throws an 
 //        error in this situation
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void rcrypto(void *buf, size_t n) {
+void rbyte(void *buf, size_t n) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // macOS and BSD support arc4random_buf()
@@ -76,7 +76,7 @@ void rcrypto(void *buf, size_t n) {
 // Get random bytes from the system RNG  (R Callable)
 //
 // @param n_ number of bytes
-// @param type_ 'raw' or 'string'
+// @param type_ 'raw' or "chr"
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP rcrypto_(SEXP n_, SEXP type_) {
   
@@ -86,7 +86,7 @@ SEXP rcrypto_(SEXP n_, SEXP type_) {
   size_t n = (size_t)asInteger(n_);
   void *buf = R_alloc(n, 1);
   
-  rcrypto(buf, n);
+  rbyte(buf, n);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Wrap bytes for R and return

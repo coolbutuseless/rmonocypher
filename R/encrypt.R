@@ -1,6 +1,6 @@
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' Encrypt/Decrypt Data with 'Authenticated Encryption with Additional Data' (AEAD)
+#' Low Level Encryption/Decryption or Raw Vectors with 'Authenticated Encryption with Additional Data' (AEAD)
 #' 
 #' Implements authenticated encryption as documented here \url{https://monocypher.org/manual/aead}
 #' 
@@ -18,17 +18,14 @@
 #' data is a part of the message authentication. See below for more details.
 #' 
 #' @param x Data to encrypt. Character string or raw vector.
-#' @param key The encryption key. Can be a character string, a 32-byte raw vector
-#'        or a 64-character hex string (encoding 32 bytes). When a shorter character string 
-#'        is given, a 32-byte key is derived using the Argon2 algorithm and 
-#'        a default, fixed code (note: this is insecure).  
-#'        If this argument is not explicitly set by the user 
+#' @param key The encryption key. This may be a character string, a 32-byte raw vector
+#'        or a 64-character hex string (which encodes 32 bytes). When a shorter character string 
+#'        is given, a 32-byte key is derived using the Argon2 key derivation
+#'        function.  
+#'        If a key is not explicitly set by the user 
 #'        when calling the function, an attempt is made to fetch \code{'MONOCYPHER_KEY'} from
 #'        the session global options. 
-#'        It is recommended that a key be created external to this function call.
 #' @param src Raw vector of data to decrypt
-#' @param type Return type for decrypted data. Possible values: 'raw', or 'string'.
-#'        Default: 'raw'
 #' @param additional_data Additional data to include in the
 #'        authentication.  Raw vector or character string. Default: NULL.  
 #'        This additional data is \emph{not}
@@ -60,18 +57,16 @@
 #' the ChaCha20 stream cipher with the Poly1305 message authentication code.
 #' 
 #' @return \code{encrypt_raw()} returns a raw vector containing the \emph{nonce},
-#'         \emph{mac}, \emph{size of the encrypted data}, and the encrypted
-#'         data itself.
+#'         \emph{mac} and the encrypted data
 #'         
-#'         \code{decrypt_raw()} returns the decrypted data as a raw vector or
-#'         string depending upon the \code{type} argument.
+#'         \code{decrypt_raw()} returns the decrypted data as a raw vector
 #'         
 #' @export
 #' 
 #' @examples
 #' # Encrypt/Decrypt a string or raw vector
 #' # Data to encrypt
-#' dat <- "Follow the white rabbit"
+#' dat <- "Follow the white rabbit" |> charToRaw()
 #' 
 #' # Create an encryption key
 #' key <- argon2("my secret key") # Keep this key secret!
@@ -81,25 +76,8 @@
 #' enc <- encrypt_raw(dat, key)
 #' enc
 #' 
-#' # Using the same key, decrypt the data as bytes
-#' decrypt_raw(enc, key)
-#' # Decrypt as a string
-#' decrypt_raw(enc, key, type = 'string')
-#' 
-#' # The following is an advanced feature
-#' # Using additional data to encrypt a message
-#' key      <- argon2("my secret key")
-#' message  <- 'Meet me in St Louis'
-#' envelope <- 'To: Judy'
-#' enc      <- encrypt_raw(message, key, additional_data = envelope)
-#' 
-#' # Package the additional data and deliver to recipient
-#' letter <- list(envelope = envelope, contents = enc)
-#' letter
-#' 
-#' # Recipient decodes message. If envelope or contents are tampered with, 
-#' # the message decryption will fail.
-#' decrypt_raw(letter$contents, key = key, type = 'string', additional_data = letter$envelope)
+#' # Using the same key, decrypt the data 
+#' decrypt_raw(enc, key) |> rawToChar()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 encrypt_raw <- function(x, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
   .Call(encrypt_, x, key, additional_data)
@@ -110,6 +88,80 @@ encrypt_raw <- function(x, key = getOption("MONOCYPHER_KEY", default = NULL), ad
 #' @rdname encrypt_raw
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-decrypt_raw <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), type = 'raw', additional_data = NULL) {
-  .Call(decrypt_, src, key, type, additional_data)
+decrypt_raw <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
+  .Call(decrypt_, src, key, additional_data)
 }
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Save an encrypted RDS
+#' 
+#' @inheritParams encrypt_raw
+#' @param robj R object
+#' @param dst Either a filename or NULL. Default: NULL write results to a raw vector
+#'
+#' @return Raw vector containing encrypted object written to file or returned
+#' @export
+#' 
+#' @examples
+#' key <- argon2('my key')
+#' encrypt(mtcars, key = key) |> 
+#'   decrypt(key = key)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+encrypt <- function(robj, dst = NULL, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
+  
+  # Serialize the object to a raw vector
+  dat <- serialize(robj, connection = NULL, ascii = FALSE, xdr = FALSE)
+  
+  # Encrypt the raw vector
+  enc <- .Call(encrypt_, dat, key, additional_data)
+  
+  # return raw vector or write to file
+  if (is.null(dst)) {
+    enc
+  } else {
+    writeBin(enc, dst)
+    invisible(dst)
+  }
+}
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' Decrypt an ecnrypted object
+#' 
+#' @inheritParams encrypt_raw
+#' @param src Raw vector or filename
+#'
+#' @return Decrypted, unserialized R object
+#' @export
+#' 
+#' @examples
+#' key <- argon2('my key')
+#' encrypt(mtcars, key = key) |> 
+#'   decrypt(key = key)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+decrypt <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
+
+  # If 'src' is not a raw vector then it must be a filename
+  if (!is.raw(src)) {
+    src <- readBin(src, 'raw', n = file.size(src))
+  }  
+
+  # Decrypt the encrypted data in the raw vector
+  dec <- .Call(decrypt_, src, key, additional_data)
+  
+  # Unserialize the object 
+  unserialize(dec)
+}
+
+
+
+
+
+
+
+
+
+
+

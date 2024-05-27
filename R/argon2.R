@@ -32,8 +32,8 @@
 #'        See \url{https://en.wikipedia.org/wiki/Salt_(cryptography)} for more details.
 #'        The 'salt' may also be a non-hexadecimal string, in which case a real
 #'        salt will be created by using Argon2 with a default internal salt.
-#' @param type Should the data be returned as raw bytes? Default: 'string'. 
-#'        Possible values 'string' or 'raw'
+#' @param type Should the data be returned as raw bytes? Default: "chr". 
+#'        Possible values "chr" or 'raw'
 #'
 #' @return raw vector of the requested length
 #' @export
@@ -47,12 +47,12 @@
 #' # as the seed.  This is not the best security practice
 #' argon2("my secret", salt = "my secret")
 #'
-#' # Best practice is to use your own random bytes for the salt
-#' argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
-#'
-#' # Can also use 'rcrypto()' to source random bytes
-#' argon2("my secret", salt = rcrypto(16))
+#' # Best practice is to use random bytes for the salt
+#' # This particular key can then only be recovered if the pass-phrase and
+#' # the salt are known.
+#' salt <- rbyte(16) # You'll want to save this value somewhere
+#' argon2("my secret", salt = salt)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-argon2 <- function(passphrase, salt = passphrase, length = 32, type = 'string') {
+argon2 <- function(passphrase, salt = passphrase, length = 32, type = "chr") {
   .Call(argon2_, passphrase, salt, length, type);
 }

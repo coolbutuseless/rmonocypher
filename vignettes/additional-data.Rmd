@@ -1,0 +1,75 @@
+---
+title: "Encrypting with Additional Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Encrypting with Additional Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(rmonocypher)
+```
+
+
+# Additional data
+
+**Note:** This is an advanced topic, and not essential for regular use of the encryption 
+tools in this package.
+
+This package uses ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
+to encrypt messages.
+
+Additional data (or 'associated data') may be included in the encryption
+process. This additional data is part of the message authentication, but 
+not part of the encrypted message.
+
+A common way additional data is used is for encrypted data which has an 
+unencrypted header containing meta-information.  This header must be readable
+before the message is decrypted, but also must not allow tampering.
+
+An example of the use of *additional data* is addressing an encrypted message to a particular
+recipient.
+
+The address on the envelope must be readable to allow delivery, but the message
+inside needs to remain confidential.  
+
+In this case, the *address* is the *additional data* -
+it is sent with the data, but not encrypted.  Because the address forms
+part of the message authentication, any modification of the address will 
+prevent the authentication of the encrypted payload.
+
+**In the following example**, a message for Judy is encrypted, and the address
+on the envelope is used as the *additional data*.
+
+```{r}
+# Using additional data to encrypt a message
+file     <- tempfile()
+key      <- argon2("my secret key2")
+message  <- 'Meet me in St Louis' 
+address  <- 'To: Judy'
+enc      <- encrypt(message, file, key, additional_data = address)
+
+# Package the additional data and deliver to recipient
+letter <- list(address = address, message = file)
+letter
+
+# Recipient decodes message, and the 'address' forms part of the decryption.
+decrypt(letter$message, key = key, additional_data = letter$address)
+```
+
+If a malicious third-party tampers with the address, then the message cannot
+be authenticated.  E.g. if the letter is altered as if it were being sent
+to "Sandra", then decryption will fail:
+
+```{r error = TRUE}
+letter$address <- "To: Sandra"
+decrypt(letter$message, key = key, additional_data = letter$address)
+```
