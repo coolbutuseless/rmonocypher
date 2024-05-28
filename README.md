@@ -62,20 +62,20 @@ decrypt(        src = "SharedDrive/mydata.dat", key = "mykey")
 For more details on how passwords are used to derive encryption keys,
 and for other ways of supplying and generating keys see the Vignette:
 [Encryption
-Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html).
+Keys](https://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html).
 
 ## Vignettes
 
 - [Encryption
-  Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html)
+  Keys](https://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html)
   - Generating encryption keys from passwords with `argon2()`
   - Using random bytes as the encryption key
   - Using hexadecimal string as the encryption key
 - [Technical
-  Notes](http://coolbutuseless.github.io/package/rmonocypher/articles/technical-notes.html)
+  Notes](https://coolbutuseless.github.io/package/rmonocypher/articles/technical-notes.html)
   - Background on the encryptiong techniques used
 - [Using Additional
-  Data](http://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
+  Data](https://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
   - Advanced technique which is not needed for everyday use of this
     package.
   - Details on using *additional data*

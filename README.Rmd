@@ -53,7 +53,7 @@ A typical use-case this package addresses:
   
 #### Technical *bona fides* 
 
-* Cryptographic primitives are provided by the included [`monocypher`](https://monocypher.org/) library
+* Cryptographic primitives are provided by the included [`monocypher`](https://monocypher.org/) library (v4.0.2)
 * Encryption method is [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) 
   which combines ChaCha20 stream cipher (extended nonce variant) with Poly1305 message authentication.
 * Encryption process follows RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
@@ -81,19 +81,19 @@ decrypt(        src = "SharedDrive/mydata.dat", key = "mykey")
 
 
 For more details on how passwords are used to derive encryption keys, 
-and for other ways of supplying and generating keys see the Vignette: [Encryption Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html).
+and for other ways of supplying and generating keys see the Vignette: [Encryption Keys](https://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html).
 
 
 
 ## Vignettes
 
-* [Encryption Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html)
+* [Encryption Keys](https://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html)
     * Generating encryption keys from passwords with `argon2()`
     * Using random bytes as the encryption key
     * Using hexadecimal string as the encryption key
-* [Technical Notes](http://coolbutuseless.github.io/package/rmonocypher/articles/technical-notes.html)
+* [Technical Notes](https://coolbutuseless.github.io/package/rmonocypher/articles/technical-notes.html)
     * Background on the encryptiong techniques used
-* [Using Additional Data](http://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
+* [Using Additional Data](https://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
     * Advanced technique which is not needed for everyday use of this package.
     * Details on using *additional data* 
     * Worked example 

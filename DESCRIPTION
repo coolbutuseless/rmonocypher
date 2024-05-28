@@ -6,8 +6,7 @@ Authors@R: c(
     person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
     person("Loup", "Vaillant", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
     person("Michael", "Savage", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
-    person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
-    person("Daan", "Sprenkels", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'sss' code")
+    person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library")
     )
 Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
 Description: Easy-to-use data encryption backed by modern standard cryptography.
@@ -29,7 +28,5 @@ Depends:
 Copyright: This package includes the 'monocypher' library written by Loup Vaillant,
     Michael Savage and Fabio Scotomi. See file 'inst/LICENSE-monocypher.md' for 
     the license for 'monocypher'.
-    This package includes code written and copyright Daan Sprenkels. See file
-    'inst/LICENSE-sss.md' for the license for this included code.
 Config/testthat/edition: 3
 VignetteBuilder: knitr
