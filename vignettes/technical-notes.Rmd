@@ -14,19 +14,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(rmonocypher)
-```
-
 
 # General Technical Notes
 
-
-* data is encrypted prior to writing to file
-* `encrypt()` understands any data understood by `saveRDS()`
-* Encryption follows RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
-i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message authentication code.
-* The 24-byte nonce is derived internally using 24 random bytes from `rbyte()`
+* Objects are encrypted in memory prior to writing to file
+* `encrypt()`/`decrypt()` can process any R object understood by `serialize()`
 
 The encryption technique in this package is [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
 which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) variant of the ChaCha20-Poly1305 technique used in 
@@ -34,6 +26,7 @@ which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XC
 [SSH](https://en.wikipedia.org/wiki/Secure_Shell) and 
 [Wireguard](https://en.wikipedia.org/wiki/WireGuard).
 
+The encryption method follows RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
 
 * The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
   counter/ratcheting mechanisms do not need to be used, and random bytes are 
@@ -41,19 +34,18 @@ which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XC
 * The nonce is created internally using random bytes from the cryptographic random number
   generator from the system this is running on.
 * In general when encrypting data using Authenticated Encryption:
-    * these should be kept secret:
+    * Keep the following items **secret**:
         * the original data (obviously!)
         * the encryption key.
-    * these elements do not need to be kept secret:
+    * These items are **not secret**:
+        * Nonce
         * MAC - message authentication code
         * Number of bytes of data
-        * Nonce
-        * Salt (if `argon2()` is being used to derive `key` from a password)
 
 
 ### File structure
 
-The file structure for encrypted data created by this package is documented here.
+The data structure is a concatenation of the nonce, mac and encrypted data
 
 * `[nonce] [mac] [encrypted data]`
     * `[nonce]` = 24 bytes
@@ -64,10 +56,3 @@ The file structure for encrypted data created by this package is documented here
 
 The package relies on the cryptographic algorithms supplied by [`monocypher`](https://monocypher.org/)
 
-
-* RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
-i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message authentication code.
-* Argon2 password-based key derivation
-
-Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
-code.

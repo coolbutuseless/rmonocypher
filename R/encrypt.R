@@ -143,8 +143,12 @@ decrypt <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), addi
   # Decrypt the encrypted data in the raw vector
   dec <- .Call(decrypt_, src, key, additional_data)
   
-  # decompress
-  dec <- memDecompress(dec)
+  # decompress.
+  # Using type = 'unknown' will auto-detect which method was used for compression
+  # but it is unnecessarily noisy and produces warnings about what it guessed.
+  suppressWarnings({
+    dec <- memDecompress(dec, type = 'unknown')
+  })
   
   # Unserialize the object 
   unserialize(dec)

@@ -9,13 +9,9 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = FALSE,
   comment = "#>"
 )
-```
-
-```{r setup}
-library(rmonocypher)
 ```
 
 
@@ -35,6 +31,8 @@ A common way additional data is used is for encrypted data which has an
 unencrypted header containing meta-information.  This header must be readable
 before the message is decrypted, but also must not allow tampering.
 
+# Worked example
+
 An example of the use of *additional data* is addressing an encrypted message to a particular
 recipient.
 
@@ -50,13 +48,18 @@ prevent the authentication of the encrypted payload.
 on the envelope is used as the *additional data*.
 
 ```{r}
+library(rmonocypher)
+
 # Using additional data to encrypt a message
 file     <- tempfile()
 key      <- argon2("my secret key2")
 message  <- 'Meet me in St Louis' 
 address  <- 'To: Judy'
 enc      <- encrypt(message, file, key, additional_data = address)
+```
 
+
+```{r}
 # Package the additional data and deliver to recipient
 letter <- list(address = address, message = file)
 letter
