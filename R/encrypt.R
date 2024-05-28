@@ -100,6 +100,8 @@ decrypt_raw <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), 
 #' @inheritParams encrypt_raw
 #' @param robj R object
 #' @param dst Either a filename or NULL. Default: NULL write results to a raw vector
+#' @param compress compression type. Default: 'none'.  Possible values:
+#'        'none', 'gzip', 'bzip2', 'xz'
 #'
 #' @return Raw vector containing encrypted object written to file or returned
 #' @export
@@ -109,10 +111,17 @@ decrypt_raw <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), 
 #' encrypt(mtcars, key = key) |> 
 #'   decrypt(key = key)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-encrypt <- function(robj, dst = NULL, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL) {
+encrypt <- function(robj, dst = NULL, key = getOption("MONOCYPHER_KEY", default = NULL), additional_data = NULL,
+                    compress = c('none', 'gzip', 'bzip2', 'xz')) {
   
   # Serialize the object to a raw vector
   dat <- serialize(robj, connection = NULL, ascii = FALSE, xdr = FALSE)
+  
+  # Optionally compress data
+  compress <- match.arg(compress)
+  if (compress != 'none') {
+    dat <- memCompress(dat, type = compress)
+  }
   
   # Encrypt the raw vector
   enc <- .Call(encrypt_, dat, key, additional_data)
@@ -150,6 +159,9 @@ decrypt <- function(src, key = getOption("MONOCYPHER_KEY", default = NULL), addi
 
   # Decrypt the encrypted data in the raw vector
   dec <- .Call(decrypt_, src, key, additional_data)
+  
+  # decompress
+  dec <- memDecompress(dec)
   
   # Unserialize the object 
   unserialize(dec)

@@ -1,32 +1,23 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Read/Write Encrypted Data
+# Encryption for R Data
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`{rmonocypher}` provides an easy-to-use tool for encrypting/decrypting
-data with R.
+`{rmonocypher}` provides a simplified interface for encrypting data with
+R using modern cryptography.
 
-The key encryption technique in this package is
-[XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
-which is the [extended
-nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
-variant of the ChaCha20-Poly1305 technique used in
-[IPsec](https://en.wikipedia.org/wiki/IPsec),
-[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and
-[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
-
-This package is backed by the cryptographic primitives provided by the
+This package is powered by the cryptographic functions from the
 [`monocypher`](https://monocypher.org/) library.
 
 ## What’s in the box
 
-- `encrypt()` and `decrypt()` for reading/writing encrypted R objects to
-  file
+- `decrypt()`/`encrypt()` read/write encrypted R objects to file (or raw
+  vectors)
 - `argon2()` derives encryption keys from pass-phrases
 - `rbyte()` generates random bytes using your operating system’s
   cryptographically secure pseudo-random number generator.
@@ -112,7 +103,7 @@ decrypt(        src = "SharedDrive/mydata.rds")
 
 ## Create an encryption key from a pass-phrase
 
-The encrypted data is only as save as your pass-phrase, so make it a
+The encrypted data is only as safe as your pass-phrase, so make it a
 good one!
 
 ``` r
@@ -219,11 +210,20 @@ argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
 argon2("my secret", salt = rbyte(16))
 ```
 
-    #> [1] "24d5ef1bcaf9ce524d200c610ad3d68df0a2e21d25ea5744090326895b87b1c9"
+    #> [1] "31b0ea255d76e3bdfca24a2c272b89d8b8496eba27d4384f71078c1cc9abcfff"
 
 </details>
 
 # General Technical Notes
+
+The key encryption technique in this package is
+[XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+which is the [extended
+nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
+variant of the ChaCha20-Poly1305 technique used in
+[IPsec](https://en.wikipedia.org/wiki/IPsec),
+[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and
+[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
 
 - The nonce used within ‘monocypher’ is 24-bytes (192 bits). This is
   large enough that counter/ratcheting mechanisms do not need to be

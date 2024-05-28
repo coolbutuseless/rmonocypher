@@ -8,7 +8,8 @@ encrypt(
   robj,
   dst = NULL,
   key = getOption("MONOCYPHER_KEY", default = NULL),
-  additional_data = NULL
+  additional_data = NULL,
+  compress = c("none", "gzip", "bzip2", "xz")
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ included with the encrypted data, but represents an essential
 component of the message authentication. The same \code{additional_data} 
 must be presented during both encryption and decryption for the message
 to be authenticated.  See section below on 'Additional Data'.}
+
+\item{compress}{compression type. Default: 'none'.  Possible values:
+'none', 'gzip', 'bzip2', 'xz'}
 }
 \value{
 Raw vector containing encrypted object written to file or returned
