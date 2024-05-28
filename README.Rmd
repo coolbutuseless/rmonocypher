@@ -36,7 +36,7 @@ if (FALSE) {
 [![R-CMD-check](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`{rmonocypher}` provides a simple, high-level interface for easily encrypting data using
+`{rmonocypher}` provides a simple, high-level interface for easily encrypting R objects using
 strong, modern cryptographic techniques.
 
 A typical use-case this package addresses:

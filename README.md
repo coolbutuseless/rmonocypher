@@ -9,7 +9,7 @@
 <!-- badges: end -->
 
 `{rmonocypher}` provides a simple, high-level interface for easily
-encrypting data using strong, modern cryptographic techniques.
+encrypting R objects using strong, modern cryptographic techniques.
 
 A typical use-case this package addresses:
 
@@ -26,7 +26,7 @@ A typical use-case this package addresses:
 #### Technical *bona fides*
 
 - Cryptographic primitives are provided by the included
-  [`monocypher`](https://monocypher.org/) library
+  [`monocypher`](https://monocypher.org/) library (v4.0.2)
 - Encryption method is
   [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
   which combines ChaCha20 stream cipher (extended nonce variant) with

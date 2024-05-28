@@ -1,6 +1,6 @@
 Package: rmonocypher
 Type: Package
-Title: Easy-to-Use Data Encryption Backed by Modern Cryptography
+Title: Easy Encryption of R Objects using Strong Modern Cryptography
 Version: 0.1.7.9000
 Authors@R: c(
     person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
@@ -9,11 +9,10 @@ Authors@R: c(
     person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library")
     )
 Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
-Description: Easy-to-use data encryption backed by modern standard cryptography.
-    This implementation  R interface to  
-    the 'monocypher' 'C' library (available from <https://monocypher.org>).
-    Keys may also be shared secretly among a group using Shamir's Secret
-    Sharing (see <https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing>).
+Description: Easy-to-use encryption of R objects using modern cryptography.
+    Objects are serialized and then encrypted using 'XChaCha20-Poly1305' (<https://en.wikipedia.org/wiki/ChaCha20-Poly1305>)
+    which follows RFC 8439 for authenticated encryption (<https://en.wikipedia.org/wiki/Authenticated_encryption>).
+    Cryptographic functions are provided by the 'monocypher' 'C' library (<https://monocypher.org>).
 URL: https://github.com/coolbutuseless/rmonocypher
 BugReports: https://github.com/coolbutuseless/rmonocypher/issues
 License: MIT + file LICENSE
