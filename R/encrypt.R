@@ -32,24 +32,7 @@
 #'        included with the encrypted data, but represents an essential
 #'        component of the message authentication. The same \code{additional_data} 
 #'        must be presented during both encryption and decryption for the message
-#'        to be authenticated.  See section below on 'Additional Data'.
-#' 
-#' @section Additional Data:
-#' 
-#' Additional data (or 'associated data') may be included in the encryption
-#' process. This additional data is part of the message authentication, but 
-#' not part of the encrypted message.
-#' 
-#' A common way additional data is used is for encrypted data which has an 
-#' unencrypted header containing meta-information.  This header must be readable
-#' before the message is decrypted, but also must not allow tampering.
-#' 
-#' An example of the use of encrypted data is an encrypted network packet.  The
-#' packet header must be readable to allow routing, but the encrypted payload
-#' needs to remain confidential.  In this case, the header is the \emph{additional data} -
-#' it is sent with the data, but not encrypted.  Because the header forms
-#' part of the message authentication, any modification of the header will 
-#' affect the authentication of the encrypted payload.
+#'        to be authenticated.  See vignette on 'Additional Data'.
 #' 
 #' @section Technical Notes:
 #' The encryption functions in this package implement RFC 8439 ChaCha20-Poly1305

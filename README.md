@@ -8,262 +8,75 @@
 [![R-CMD-check](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`{rmonocypher}` provides a simplified interface for encrypting data with
-R using modern cryptography.
+`{rmonocypher}` provides a simple, high-level interface for easily
+encrypting data using strong, modern cryptographic techniques.
 
-This package is powered by the cryptographic functions from the
-[`monocypher`](https://monocypher.org/) library.
+A typical use-case this package addresses:
+
+    I want to easily save data to a shared folder (or cloud drive) which only
+    I can decrypt.
 
 ## What’s in the box
 
-- `decrypt()`/`encrypt()` read/write encrypted R objects to file (or raw
-  vectors)
-- `argon2()` derives encryption keys from pass-phrases
-- `rbyte()` generates random bytes using your operating system’s
-  cryptographically secure pseudo-random number generator.
+- `decrypt()`/`encrypt()` read/write encrypted R objects to file
+- `argon2()` derives encryption keys from passwords
+- `rbyte()` generates secure random bytes using your operating system’s
+  CSPRNG.
+
+#### Technical *bona fides*
+
+- Cryptographic primitives are provided by the included
+  [`monocypher`](https://monocypher.org/) library
+- Encryption method is
+  [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+  which combines ChaCha20 stream cipher (extended nonce variant) with
+  Poly1305 message authentication.
+- Encryption process follows RFC 8439 [‘Authenticated Encryption with
+  Additional Data
+  (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
+- Key derivation uses [Argon2 password-based key
+  derviation](https://en.wikipedia.org/wiki/Argon2).
+- Cryptographically secure pseudo-random number generators (CSPRNG)
+  provided by the operating system are used to generate any required
+  secure random bytes.
 
 ## Installation
 
-To install `rmonocypher` from
-[GitHub](https://github.com/coolbutuseless/rmonocypher) with:
+Install `rmonocypher` from
+[GitHub](https://github.com/coolbutuseless/rmonocypher):
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("coolbutuseless/rmonocypher")
 ```
 
-## Save data to an encrypted file
+## Read/write data to an encrypted file
 
-- Data cannot be decrypted without the pass-phrase
-- Safe to save to shared folders
-
-``` r
-encrypt(mydata, dst = "SharedDrive/mydata.rds", key = "mykey")
-decrypt(        src = "SharedDrive/mydata.rds", key = "mykey")
-```
-
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<details>
-<summary style="font-size:large;">
-Technical Notes (click to expand)
-</summary>
-
-- a pass-phrase key is transformed to 32-byte encryption key using
-  `argon2()`
-- the key may also be provided as a 32-byte raw vector, or a
-  64-character hexadecimal string
-- data is encrypted prior to writing to file
-- `encrypt()` understands any data understood by `saveRDS()`
-- Encryption follows RFC 8439 [‘Authenticated Encryption with Additional
-  Data
-  (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
-  i.e. ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305
-  message authentication code.
-- The 24-byte nonce is derived internally using 24 random bytes from
-  `rbyte()`
-
-</details>
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<details>
-<summary style="font-size:large;">
-Using a pre-generated encryption key (click to expand)
-</summary>
+Encrypt any R object and save to file.
 
 ``` r
-# Create an encryption key from your secret pass-phrase
-key <- argon2("horse battery stapler")
-
-encrypt(mydata, dst = "SharedDrive/mydata.rds", key = key)
-decrypt(        src = "SharedDrive/mydata.rds", key = key)
+encrypt(mydata, dst = "SharedDrive/mydata.dat", key = "mykey")
+decrypt(        src = "SharedDrive/mydata.dat", key = "mykey")
 ```
 
-</details>
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<details>
-<summary style="font-size:large;">
-Using an encryption key set via `options()` (click to expand)
-</summary>
+For more details on how passwords are used to derive encryption keys,
+and for other ways of supplying and generating keys see the Vignette:
+[Encryption
+Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html).
 
-``` r
-# Create a key and set via options() 
-key <- argon2("horse battery stapler")
-options(MONOCYPHER_KEY = key)
+## Vignettes
 
-
-encrypt(mydata, dst = "SharedDrive/mydata.rds")
-decrypt(        src = "SharedDrive/mydata.rds")
-```
-
-</details>
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-## Create an encryption key from a pass-phrase
-
-The encrypted data is only as safe as your pass-phrase, so make it a
-good one!
-
-``` r
-key <- argon2("horse battery stapler")
-key
-```
-
-    #> [1] "2d465fc9f8e116425a3003c8e8edfeb490a14116099f0b3e78b830bb32e38da4"
-
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<details>
-<summary style="font-size:large;">
-Technical Notes (click to expand)
-</summary>
-
-Argon2 is a resource intensive password-based key derivation scheme.
-
-Use `argon2()` to generate random bytes for keys from a pass-phrase.
-
-If no explicit `salt` is provided, a salt will be derived internally
-from the pass-phrase. This is deterministic such that the same
-pass-phase will always generate the same key. This is convenient if
-expecting to face a sophisticated, concerted attacker using rainbow
-tables, then use a random salt generated by `rbyte(16)`
-
-</details>
-<details>
-<summary style="font-size:large;">
-Notes on Encryption Keys (click to expand)
-</summary>
-
-The encryption `key` is the core secret information that allows for
-encrypting data.
-
-The `key` for encryption may be one of:
-
-- A 32-byte raw vector
-- A 64-character hexadecimal string
-- A pass-phrase
-
-The `key` may be created by:
-
-- Using random bytes from a cryptographically secure source
-  e.g. `rbyte()`
-- Using Argon2 to derive random bytes from a pass-phrase i.e. `argon2()`
-- Creating a shared key through key exchange with another person
-
-When calling functions in `{rmonocypher}`, the key may be set explicitly
-when the function is called, but can also be set globally for the
-current session using `options(MONOCYPHER_KEY = "...")`
-
-## Using random bytes as a key
-
-``` r
-# Random raw bytes generated by rbyte()  ** Recommended **
-# rbyte() is a cryptographically secure pseudo-random number generator
-key <- rbyte(32)
-
-# 64-character hexadecimal string
-key <- "82febb63ac2ab2a10193ee40ac711250965ed35dc1ce6a7e213145a6fa753230"
-```
-
-</details>
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<details>
-<summary style="font-size:large;">
-Further Examples using ‘argon2()’ (click to expand)
-</summary>
-
-``` r
-# When no salt is provided, a salt will be 
-# derived internally from the pass-phrase.  This is convenient, but 
-# not as secure as using random bytes.
-argon2("my secret")
-```
-
-    #> [1] "bd7549bef4100b888c47e421b03c52fee58b285fcc40dfa4c0502689c4ed16d0"
-
-``` r
-# Use text as the salt
-argon2("my secret", salt = "salt and vinegar")
-```
-
-    #> [1] "16df2856ba2ecc020ff506831a691b1d92616948197fb74fa651bfc89cad65e4"
-
-``` r
-# Use a 32-character hexadecimal string as the salt
-argon2("my secret", salt = "cefca6aafae5bdbc15977fd56ea7f1eb")
-```
-
-    #> [1] "2216b700af05984f21d7465487f21de0096f7aaa164d2b56c54803e3891ec071"
-
-``` r
-# Use 16-bytes of random data for the salt
-argon2("my secret", salt = as.raw(sample(0:255, 16, TRUE)))
-```
-
-    #> [1] "368d4613996f6d9083524bfacf972117fc40953461a248b9c5406aeeb7b3c93e"
-
-``` r
-# Use 'rbyte()' to source 16 random bytes for the salt
-argon2("my secret", salt = rbyte(16))
-```
-
-    #> [1] "31b0ea255d76e3bdfca24a2c272b89d8b8496eba27d4384f71078c1cc9abcfff"
-
-</details>
-
-# General Technical Notes
-
-The key encryption technique in this package is
-[XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
-which is the [extended
-nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
-variant of the ChaCha20-Poly1305 technique used in
-[IPsec](https://en.wikipedia.org/wiki/IPsec),
-[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and
-[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
-
-- The nonce used within ‘monocypher’ is 24-bytes (192 bits). This is
-  large enough that counter/ratcheting mechanisms do not need to be
-  used, and random bytes are unlikely to generate the same nonce twice
-  in any reasonable timeframe.
-- The nonce is created internally using random bytes from the
-  cryptographic random number generator from the system this is running
-  on.
-- In general when encrypting data using Authenticated Encryption:
-  - these should be kept secret:
-    - the original data (obviously!)
-    - the encryption key.
-  - these elements do not need to be kept secret:
-    - MAC - message authentication code
-    - Number of bytes of data
-    - Nonce
-    - Salt (if `argon2()` is being used to derive `key` from a
-      pass-phrase)
-
-### File structure
-
-The file structure for encrypted data created by this package is
-documented here.
-
-- `[nonce] [mac] [encrypted data]`
-  - `[nonce]` = 24 bytes
-  - `[mac]` = 16 bytes
-  - `[encrypted data]` = remaining bytes
-
-### Included Cryptographic Libraries
-
-The package relies on the cryptographic algorithms supplied by
-[`monocypher`](https://monocypher.org/)
-
-- x25519 key exchange (Public Key Cryptography)
-- RFC 8439 [‘Authenticated Encryption with Additional Data
-  (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
-  i.e. ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305
-  message authentication code.
-- Argon2 password-based key derivation
-
-Shamir’s Secret Sharing uses Daan Sprenkel’s
-[sss](https://github.com/dsprenkels/sss) code.
+- [Encryption
+  Keys](http://coolbutuseless.github.io/package/rmonocypher/articles/encryption-keys.html)
+  - Generating encryption keys from passwords with `argon2()`
+  - Using random bytes as the encryption key
+  - Using hexadecimal string as the encryption key
+- [Technical
+  Notes](http://coolbutuseless.github.io/package/rmonocypher/articles/technical-notes.html)
+  - Background on the encryptiong techniques used
+- [Using Additional
+  Data](http://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
+  - Advanced technique which is not needed for everyday use of this
+    package.
+  - Details on using *additional data*
+  - Worked example

@@ -27,7 +27,7 @@ This additional data is \emph{not}
 included with the encrypted data, but represents an essential
 component of the message authentication. The same \code{additional_data} 
 must be presented during both encryption and decryption for the message
-to be authenticated.  See section below on 'Additional Data'.}
+to be authenticated.  See vignette on 'Additional Data'.}
 }
 \value{
 Decrypted, unserialized R object

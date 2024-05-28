@@ -207,9 +207,9 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// R-callable function for deriving a key from a pass-phrase
+// R-callable function for deriving a key from a password
 //
-// @param password_ pass phrase
+// @param password_ password
 // @param salt_ 16 byte salt. Or hex string. Or shorter string to be expanded
 // @param hash_length_ output key length
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

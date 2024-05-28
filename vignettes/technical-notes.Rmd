@@ -1,0 +1,73 @@
+---
+title: "Technical Notes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Technical Notes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(rmonocypher)
+```
+
+
+# General Technical Notes
+
+
+* data is encrypted prior to writing to file
+* `encrypt()` understands any data understood by `saveRDS()`
+* Encryption follows RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
+i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message authentication code.
+* The 24-byte nonce is derived internally using 24 random bytes from `rbyte()`
+
+The encryption technique in this package is [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+which is the [extended nonce](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) variant of the ChaCha20-Poly1305 technique used in 
+[IPsec](https://en.wikipedia.org/wiki/IPsec), 
+[SSH](https://en.wikipedia.org/wiki/Secure_Shell) and 
+[Wireguard](https://en.wikipedia.org/wiki/WireGuard).
+
+
+* The nonce used within 'monocypher' is 24-bytes (192 bits).  This is large enough that 
+  counter/ratcheting mechanisms do not need to be used, and random bytes are 
+  unlikely to generate the same nonce twice in any reasonable timeframe.
+* The nonce is created internally using random bytes from the cryptographic random number
+  generator from the system this is running on.
+* In general when encrypting data using Authenticated Encryption:
+    * these should be kept secret:
+        * the original data (obviously!)
+        * the encryption key.
+    * these elements do not need to be kept secret:
+        * MAC - message authentication code
+        * Number of bytes of data
+        * Nonce
+        * Salt (if `argon2()` is being used to derive `key` from a password)
+
+
+### File structure
+
+The file structure for encrypted data created by this package is documented here.
+
+* `[nonce] [mac] [encrypted data]`
+    * `[nonce]` = 24 bytes
+    * `[mac]` = 16 bytes
+    * `[encrypted data]` = remaining bytes
+
+### Included Cryptographic Libraries 
+
+The package relies on the cryptographic algorithms supplied by [`monocypher`](https://monocypher.org/)
+
+
+* RFC 8439 ['Authenticated Encryption with Additional Data (AEAD)'](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD)) 
+i.e.  ChaCha20-Poly1305 combining ChaCha20 stream cipher with Poly1305 message authentication code.
+* Argon2 password-based key derivation
+
+Shamir's Secret Sharing uses Daan Sprenkel's [sss](https://github.com/dsprenkels/sss)
+code.

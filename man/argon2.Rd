@@ -2,7 +2,7 @@
 % Please edit documentation in R/argon2.R
 \name{argon2}
 \alias{argon2}
-\title{Generate bytes from a pass-phrase using Argon2 password-based key derivation}
+\title{Generate bytes from a password using Argon2 password-based key derivation}
 \usage{
 argon2(passphrase, salt = passphrase, length = 32, type = "chr")
 }
@@ -27,11 +27,11 @@ raw vector of the requested length
 }
 \description{
 Argon2 is a resource intensive password-based key derivation scheme. A typical
-application is generating an encryption key from a text pass-phrase.
+application is generating an encryption key from a text password.
 }
 \section{Note}{
 
-Using the same pass-phrase with the same salt will always generate the same
+Using the same password with the same salt will always generate the same
 key.  It is recommended that a random salt be used.
 }
 
@@ -52,15 +52,15 @@ See \url{https://en.wikipedia.org/wiki/Argon2} and
 
 \examples{
 # For the sake of convenience for novice users, a salt will be 
-# derived internally from the pass-phrase.
+# derived internally from the password.
 argon2("my secret")
 
-# Calling 'argon2()' without a seed is equivalent to using the pass-phrase
+# Calling 'argon2()' without a seed is equivalent to using the password
 # as the seed.  This is not the best security practice
 argon2("my secret", salt = "my secret")
 
 # Best practice is to use random bytes for the salt
-# This particular key can then only be recovered if the pass-phrase and
+# This particular key can then only be recovered if the password and
 # the salt are known.
 salt <- rbyte(16) # You'll want to save this value somewhere
 argon2("my secret", salt = salt)
