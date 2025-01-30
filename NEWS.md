@@ -2,6 +2,7 @@
 # rmonocypher 0.1.7.9001 2025-01-30
 
 * Set `R_NO_REMAP`
+* Simplification
 
 # rmonocypher 0.1.7.9000 2024-05-08
 

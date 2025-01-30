@@ -23,7 +23,7 @@
 #' \url{https://monocypher.org/manual/argon2} for more information.
 #' 
 #' 
-#' @param passphrase A character string used to derive the random bytes
+#' @param password A character string used to derive the random bytes
 #' @param length Number of bytes to output. Default: 32
 #' @param salt 16-byte raw vector or 32-character hexadecimal string.
 #'        A salt is data used as additional input to key derivation
@@ -53,6 +53,6 @@
 #' salt <- rbyte(16) # You'll want to save this value somewhere
 #' argon2("my secret", salt = salt)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-argon2 <- function(passphrase, salt = passphrase, length = 32, type = "chr") {
-  .Call(argon2_, passphrase, salt, length, type);
+argon2 <- function(password, salt = password, length = 32, type = "chr") {
+  .Call(argon2_, password, salt, length, type);
 }

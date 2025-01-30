@@ -5,16 +5,19 @@
 
 <!-- badges: start -->
 
+![](https://img.shields.io/badge/cool-useless-green.svg)
+![](https://img.shields.io/badge/dependencies-zero-blue.svg)
+[![CRAN](https://www.r-pkg.org/badges/version/mp4encoder)](https://CRAN.R-project.org/package=mp4encoder)
 [![R-CMD-check](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coolbutuseless/rmonocypher/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 `{rmonocypher}` provides a simple, high-level interface for easily
-encrypting R objects using strong, modern cryptographic techniques.
+encrypting R objects using a strong, modern cryptographic technique.
 
 A typical use-case this package addresses:
 
-    I want to easily save data to a shared folder (or cloud drive) which only
-    I can decrypt.
+    I want to easily encrypt and save data to a public location 
+    (e.g. shared drive, cloud drive, etc) which only I can decrypt.
 
 ## What’s in the box
 
@@ -36,19 +39,37 @@ A typical use-case this package addresses:
   (AEAD)’](https://en.wikipedia.org/wiki/Authenticated_encryption#Authenticated_encryption_with_associated_data_(AEAD))
 - Key derivation uses [Argon2 password-based key
   derviation](https://en.wikipedia.org/wiki/Argon2).
-- Cryptographically secure pseudo-random number generators (CSPRNG)
+- Cryptographically secure pseudo-random number generation (CSPRNG) is
   provided by the operating system are used to generate any required
-  secure random bytes.
+  random bytes.
 
 ## Installation
 
-Install `rmonocypher` from
-[GitHub](https://github.com/coolbutuseless/rmonocypher):
+<!-- This package can be installed from CRAN -->
+
+<!-- ``` r -->
+
+<!-- install.packages('rmonocypher') -->
+
+<!-- ``` -->
+
+You can install the latest development version from
+[GitHub](https://github.com/coolbutuseless/rmonocypher) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("coolbutuseless/rmonocypher")
+# install.package('remotes')
+remotes::install_github('coolbutuseless/rmonocypher')
 ```
+
+<!-- Pre-built source/binary versions can also be installed from -->
+
+<!-- [R-universe](https://r-universe.dev) -->
+
+<!-- ``` r -->
+
+<!-- install.packages('rmonocypher', repos = c('https://coolbutuseless.r-universe.dev', 'https://cloud.r-project.org')) -->
+
+<!-- ``` -->
 
 ## Read/write data to an encrypted file
 
@@ -56,7 +77,12 @@ Encrypt any R object and save to file.
 
 ``` r
 encrypt(mydata, dst = "SharedDrive/mydata.dat", key = "mykey")
-decrypt(        src = "SharedDrive/mydata.dat", key = "mykey")
+```
+
+Then decrypt the object using the same key.
+
+``` r
+decrypt(src = "SharedDrive/mydata.dat", key = "mykey")
 ```
 
 For more details on how passwords are used to derive encryption keys,
@@ -76,7 +102,7 @@ Keys](https://coolbutuseless.github.io/package/rmonocypher/articles/encryption-k
   - Background on the encryptiong techniques used
 - [Using Additional
   Data](https://coolbutuseless.github.io/package/rmonocypher/articles/additional-data.html)
-  - Advanced technique which is not needed for everyday use of this
+  - Advanced technique which is not needed for regular use of this
     package.
   - Details on using *additional data*
   - Worked example

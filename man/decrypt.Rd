@@ -4,11 +4,7 @@
 \alias{decrypt}
 \title{Decrypt an encrypted object}
 \usage{
-decrypt(
-  src,
-  key = getOption("MONOCYPHER_KEY", default = NULL),
-  additional_data = NULL
-)
+decrypt(src, key, additional_data = NULL)
 }
 \arguments{
 \item{src}{Raw vector or filename}
@@ -16,10 +12,7 @@ decrypt(
 \item{key}{The encryption key. This may be a character string, a 32-byte raw vector
 or a 64-character hex string (which encodes 32 bytes). When a shorter character string 
 is given, a 32-byte key is derived using the Argon2 key derivation
-function.  
-If a key is not explicitly set by the user 
-when calling the function, an attempt is made to fetch \code{'MONOCYPHER_KEY'} from
-the session global options.}
+function.}
 
 \item{additional_data}{Additional data to include in the
 authentication.  Raw vector or character string. Default: NULL.  
@@ -30,7 +23,7 @@ must be presented during both encryption and decryption for the message
 to be authenticated.  See vignette on 'Additional Data'.}
 }
 \value{
-Decrypted, unserialized R object
+A decrypted R object
 }
 \description{
 Decrypt an encrypted object

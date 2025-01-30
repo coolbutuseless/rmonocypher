@@ -8,3 +8,5 @@ src/*.so
 src/*.dll
 working
 inst/doc
+/doc/
+/Meta/

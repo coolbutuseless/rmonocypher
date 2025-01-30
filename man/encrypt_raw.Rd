@@ -5,17 +5,9 @@
 \alias{decrypt_raw}
 \title{Low Level Encryption/Decryption or Raw Vectors with 'Authenticated Encryption with Additional Data' (AEAD)}
 \usage{
-encrypt_raw(
-  x,
-  key = getOption("MONOCYPHER_KEY", default = NULL),
-  additional_data = NULL
-)
+encrypt_raw(x, key, additional_data = NULL)
 
-decrypt_raw(
-  src,
-  key = getOption("MONOCYPHER_KEY", default = NULL),
-  additional_data = NULL
-)
+decrypt_raw(src, key, additional_data = NULL)
 }
 \arguments{
 \item{x}{Data to encrypt. Character string or raw vector.}
@@ -23,10 +15,7 @@ decrypt_raw(
 \item{key}{The encryption key. This may be a character string, a 32-byte raw vector
 or a 64-character hex string (which encodes 32 bytes). When a shorter character string 
 is given, a 32-byte key is derived using the Argon2 key derivation
-function.  
-If a key is not explicitly set by the user 
-when calling the function, an attempt is made to fetch \code{'MONOCYPHER_KEY'} from
-the session global options.}
+function.}
 
 \item{additional_data}{Additional data to include in the
 authentication.  Raw vector or character string. Default: NULL.  

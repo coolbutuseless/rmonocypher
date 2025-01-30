@@ -4,10 +4,10 @@
 \alias{argon2}
 \title{Generate bytes from a password using Argon2 password-based key derivation}
 \usage{
-argon2(passphrase, salt = passphrase, length = 32, type = "chr")
+argon2(password, salt = password, length = 32, type = "chr")
 }
 \arguments{
-\item{passphrase}{A character string used to derive the random bytes}
+\item{password}{A character string used to derive the random bytes}
 
 \item{salt}{16-byte raw vector or 32-character hexadecimal string.
 A salt is data used as additional input to key derivation

@@ -9,7 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = FALSE,
   comment = "#>"
 )
 ```
@@ -69,22 +69,6 @@ salt <- rbyte(16)
 argon2("my secret", salt = salt)
 ```
 
-
-## Setting a global key in `options()`
-
-You may wish to load a pre-generated key at the start of a session and use this throughout.
-
-If no `key` is provided, the `encrypt()` and `decrypt()` functions attempt to 
-use a key stored in the named option: `MONOCYPHER_KEY`.
-
-```{r eval=FALSE} 
-# Create a key and set via options() 
-key <- argon2("horse battery stapler")
-options(MONOCYPHER_KEY = key)
-
-encrypt(mydata, dst = "SharedDrive/mydata.rds")
-decrypt(        src = "SharedDrive/mydata.rds")
-```
 
 ## Use raw bytes as the key
 

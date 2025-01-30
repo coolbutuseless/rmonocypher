@@ -6,3 +6,5 @@
 ^README\.Rmd$
 ^working$
 ^inst/decrypt$
+^doc$
+^Meta$

@@ -31,19 +31,6 @@ void dump_uint8(uint8_t *key, int n) {
   Rprintf("\n");
 }
 
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Fill a buffer with random bytes
-// These should be cryptographically random bytes!  FIXME TODO
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void fill_rand(uint8_t *buf, int n) {
-  GetRNGstate();
-  for (int i = 0; i < n; i++) {
-    buf[i] = (uint8_t)(round(unif_rand() * 255));
-  }
-  PutRNGstate();
-} 
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Convert a hex digit to a nibble. Return -1 if not a hexdigits
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

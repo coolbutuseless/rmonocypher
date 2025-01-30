@@ -162,7 +162,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // frameheader - get payload size for this frame
-  //   payload size is just the encyprted data.  It does not include MAC
+  //   payload size is just the encrypted data.  It does not include MAC
   //     or the bytes indicating the length.
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   size_t payload_size = ntotal - NONCESIZE - MACSIZE;
@@ -205,6 +205,8 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
       ad = RAW(additional_data_);
       ad_len = (size_t)Rf_xlength(additional_data_); 
     } else {
+      crypto_wipe(key, sizeof(key));
+      crypto_wipe(&ctx, sizeof(ctx));
       Rf_error("decrypt_(): 'additional_data' cannot be empty raw vector");
     }
   } else if (TYPEOF(additional_data_) == STRSXP) {
@@ -213,9 +215,13 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
       ad = (uint8_t *)ad_string;
       ad_len = strlen(ad_string);
     } else {
+      crypto_wipe(key, sizeof(key));
+      crypto_wipe(&ctx, sizeof(ctx));
       Rf_error("decrypt_(): 'additional_data' cannot be empty string");
     }
   } else {
+    crypto_wipe(key, sizeof(key));
+    crypto_wipe(&ctx, sizeof(ctx));
     Rf_error("decrypt_(): 'additional_data' must be raw vector or string.");
   }
   
@@ -237,7 +243,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   //    size_t text_size
   // );
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  int res = crypto_aead_read(
+  int decrypt_status = crypto_aead_read(
     &ctx, 
     plaintext, 
     mac,
@@ -251,7 +257,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Sanity check it went OK
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if (res < 0) {
+  if (decrypt_status < 0) {
     Rf_error("decrypt_(): Decryption failed\n");
   } 
   
