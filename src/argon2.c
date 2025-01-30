@@ -1,4 +1,6 @@
 
+#define R_NO_REMAP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -194,7 +196,7 @@ void argon_internal(uint8_t *password, size_t pass_size, uint8_t *salt, uint8_t 
   void *work_area = malloc((size_t)config.nb_blocks * 1024);
   
   if (work_area == NULL) {
-    error("argon2_(): Could not allocate memory for 'work_area'");
+    Rf_error("argon2_(): Could not allocate memory for 'work_area'");
   } 
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -230,10 +232,10 @@ SEXP argon2_(SEXP password_, SEXP salt_, SEXP hash_length_, SEXP type_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Hash
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  size_t N = (size_t)asInteger(hash_length_);
+  size_t N = (size_t)Rf_asInteger(hash_length_);
   uint8_t *hash = (uint8_t *)calloc(N, 1);
   if (hash == NULL) {
-    error("argon2_(): Couldn't allocate hash buffer");
+    Rf_error("argon2_(): Couldn't allocate hash buffer");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

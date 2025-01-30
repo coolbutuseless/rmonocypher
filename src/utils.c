@@ -1,4 +1,6 @@
 
+#define R_NO_REMAP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -86,7 +88,7 @@ char *bytes_to_hex(uint8_t *buf, size_t len) {
   
   char *str = (char *)calloc(len * 2 + 1, 1);
   if (str == NULL) {
-    error("bytes_to_hex() couldn't allocate %zu bytes", len * 2 + 1);
+    Rf_error("bytes_to_hex() couldn't allocate %zu bytes", len * 2 + 1);
   }
   str[0] = '\0';
   
@@ -108,10 +110,10 @@ void unpack_salt(SEXP salt_, uint8_t salt[16]) {
   static uint8_t default_salt[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   
   if (TYPEOF(salt_) == RAWSXP) {
-    if (length(salt_) >= 16) {
+    if (Rf_length(salt_) >= 16) {
       memcpy(salt, RAW(salt_), 16);
     } else {
-      error("argon2_(): 'salt' provided as a raw vector with length < %i", 16);
+      Rf_error("argon2_(): 'salt' provided as a raw vector with length < %i", 16);
     }
   } else if (TYPEOF(salt_) == STRSXP) {
     const char *text = CHAR(STRING_ELT(salt_, 0));
@@ -121,7 +123,7 @@ void unpack_salt(SEXP salt_, uint8_t salt[16]) {
       // Derive 16-byte salt from this text
       argon_internal((uint8_t *)text, (size_t)strlen(text), default_salt, salt, 16);
     } else {
-      error("argon2_(): if 'salt' is a string it must not be empty");
+      Rf_error("argon2_(): if 'salt' is a string it must not be empty");
     }
   }
 }
@@ -132,11 +134,11 @@ void unpack_salt(SEXP salt_, uint8_t salt[16]) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void unpack_key(SEXP key_, uint8_t key[32]) {
 
-  if (isNull(key_)) {
-    error("unpack_key(): Key must not be NULL");
+  if (Rf_isNull(key_)) {
+    Rf_error("unpack_key(): Key must not be NULL");
   } else if (TYPEOF(key_) == RAWSXP) {
-    if (length(key_) != 32) {
-      error("unpack_key(): Expected 32 bytes in raw vector, not %i.\n", length(key_));
+    if (Rf_length(key_) != 32) {
+      Rf_error("unpack_key(): Expected 32 bytes in raw vector, not %i.\n", Rf_length(key_));
     }
     memcpy(key, RAW(key_), 32);
   } else if (TYPEOF(key_) == STRSXP) {
@@ -154,10 +156,10 @@ void unpack_key(SEXP key_, uint8_t key[32]) {
       unpack_salt(key_, salt);
       argon_internal((uint8_t *)str, len, salt, key, 32);
     } else {
-      error("unpack_key(): zero-length string not allowed here");
+      Rf_error("unpack_key(): zero-length string not allowed here");
     }
   } else {
-    error("unpack_key(): Type of 'key' not understood");
+    Rf_error("unpack_key(): Type of 'key' not understood");
   }
 }
 
@@ -167,18 +169,18 @@ void unpack_key(SEXP key_, uint8_t key[32]) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void unpack_bytes(SEXP bytes_, uint8_t *buf, size_t N) {
   
-  if (isNull(bytes_)) {
-    error("unpack_bytes(): must not be NULL");
+  if (Rf_isNull(bytes_)) {
+    Rf_error("unpack_bytes(): must not be NULL");
   } else if (TYPEOF(bytes_) == RAWSXP) {
     memcpy(buf, RAW(bytes_), N);
   } else if (TYPEOF(bytes_) == STRSXP) {
     const char *str = CHAR(STRING_ELT(bytes_, 0));
     unsigned long len = strlen(str);
     if (len == 0 || !hexstring_to_bytes(str, buf, (int)N)) {
-      error("unpack_bytes(): couldn't extract %zu bytes", N);
+      Rf_error("unpack_bytes(): couldn't extract %zu bytes", N);
     } 
   } else {
-    error("unpack_bytes(): Type of 'bytes' not understood");
+    Rf_error("unpack_bytes(): Type of 'bytes' not understood");
   }
 }
 
@@ -193,12 +195,12 @@ SEXP wrap_bytes_for_return(uint8_t *buf, size_t N, SEXP type_) {
   const char *type = CHAR(STRING_ELT(type_, 0));
   
   if (strcmp(type, "raw") == 0) {
-    res_ = PROTECT(allocVector(RAWSXP, (R_xlen_t)N));
+    res_ = PROTECT(Rf_allocVector(RAWSXP, (R_xlen_t)N));
     memcpy(RAW(res_), buf, N);
   } else {
     char *hex = bytes_to_hex(buf, N);
-    res_ = PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(res_, 0, mkChar(hex));
+    res_ = PROTECT(Rf_allocVector(STRSXP, 1));
+    SET_STRING_ELT(res_, 0, Rf_mkChar(hex));
     free(hex);
   }
   

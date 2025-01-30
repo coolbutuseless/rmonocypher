@@ -1,4 +1,6 @@
 
+#define R_NO_REMAP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,7 +33,7 @@
 SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   
   if (TYPEOF(x_) != RAWSXP) {
-    error("'x' input must be a raw vector");
+    Rf_error("'x' input must be a raw vector");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +46,7 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   // Plain Text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t *plain_text = RAW(x_);
-  size_t payload_size = (size_t)xlength(x_);
+  size_t payload_size = (size_t)Rf_xlength(x_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Nonce
@@ -68,7 +70,7 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   // Cipher Text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   size_t N = payload_size + NONCESIZE + MACSIZE;
-  SEXP cipher_text_ = PROTECT(allocVector(RAWSXP, (R_xlen_t)N));
+  SEXP cipher_text_ = PROTECT(Rf_allocVector(RAWSXP, (R_xlen_t)N));
   uint8_t *cipher_text = RAW(cipher_text_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,14 +78,14 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t *ad = NULL;
   size_t ad_len = 0;
-  if (isNull(additional_data_)) {
+  if (Rf_isNull(additional_data_)) {
     // Do nothing
   } else if (TYPEOF(additional_data_) == RAWSXP) {
-    if (length(additional_data_) > 0) {
+    if (Rf_length(additional_data_) > 0) {
       ad = RAW(additional_data_);
-      ad_len = (size_t)xlength(additional_data_); 
+      ad_len = (size_t)Rf_xlength(additional_data_); 
     } else {
-      error("encrypt_(): 'additional_data' cannot be empty raw vector");
+      Rf_error("encrypt_(): 'additional_data' cannot be empty raw vector");
     }
   } else if (TYPEOF(additional_data_) == STRSXP) {
     const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
@@ -91,10 +93,10 @@ SEXP encrypt_(SEXP x_, SEXP key_, SEXP additional_data_) {
       ad = (uint8_t *)ad_string;
       ad_len = strlen(ad_string);
     } else {
-      error("encrypt_(): 'additional_data' cannot be empty string");
+      Rf_error("encrypt_(): 'additional_data' cannot be empty string");
     }
   } else {
-    error("encrypt_(): 'additional_data' must be raw vector or string.");
+    Rf_error("encrypt_(): 'additional_data' must be raw vector or string.");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,7 +153,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Position within cipher text
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  size_t ntotal = (size_t)xlength(src_);
+  size_t ntotal = (size_t)Rf_xlength(src_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Cipher text
@@ -168,7 +170,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // plaintext buffer for decrypted output
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  SEXP res_ = PROTECT(allocVector(RAWSXP, (R_xlen_t)payload_size));
+  SEXP res_ = PROTECT(Rf_allocVector(RAWSXP, (R_xlen_t)payload_size));
   uint8_t *plaintext = (uint8_t *)RAW(res_);
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,14 +198,14 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   uint8_t *ad = NULL;
   size_t ad_len = 0;
-  if (isNull(additional_data_)) {
+  if (Rf_isNull(additional_data_)) {
     // Do nothing
   } else if (TYPEOF(additional_data_) == RAWSXP) {
-    if (length(additional_data_) > 0) {
+    if (Rf_length(additional_data_) > 0) {
       ad = RAW(additional_data_);
-      ad_len = (size_t)xlength(additional_data_); 
+      ad_len = (size_t)Rf_xlength(additional_data_); 
     } else {
-      error("decrypt_(): 'additional_data' cannot be empty raw vector");
+      Rf_error("decrypt_(): 'additional_data' cannot be empty raw vector");
     }
   } else if (TYPEOF(additional_data_) == STRSXP) {
     const char *ad_string = CHAR(STRING_ELT(additional_data_, 0));
@@ -211,10 +213,10 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
       ad = (uint8_t *)ad_string;
       ad_len = strlen(ad_string);
     } else {
-      error("decrypt_(): 'additional_data' cannot be empty string");
+      Rf_error("decrypt_(): 'additional_data' cannot be empty string");
     }
   } else {
-    error("decrypt_(): 'additional_data' must be raw vector or string.");
+    Rf_error("decrypt_(): 'additional_data' must be raw vector or string.");
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,7 +252,7 @@ SEXP decrypt_(SEXP src_, SEXP key_, SEXP additional_data_) {
   // Sanity check it went OK
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if (res < 0) {
-    error("decrypt_(): Decryption failed\n");
+    Rf_error("decrypt_(): Decryption failed\n");
   } 
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

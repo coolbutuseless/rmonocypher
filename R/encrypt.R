@@ -120,7 +120,7 @@ encrypt <- function(robj, dst = NULL, key = getOption("MONOCYPHER_KEY", default 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' Decrypt an ecnrypted object
+#' Decrypt an encrypted object
 #' 
 #' @inheritParams encrypt_raw
 #' @param src Raw vector or filename

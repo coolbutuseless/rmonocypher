@@ -1,4 +1,5 @@
 
+#define R_NO_REMAP
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +55,7 @@ void rbyte(void *buf, size_t n) {
   size_t status = (size_t)BCryptGenRandom( NULL, ( PUCHAR ) buf, n, BCRYPT_USE_SYSTEM_PREFERRED_RNG );
   // Return value is 'NTSTATUS' value. STATUS_SUCCESS = 0.
   if (status != 0) {
-    error("cryptorng_windows() error: Status = %zu.\n", status);
+    Rf_error("cryptorng_windows() error: Status = %zu.\n", status);
   }
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,7 +64,7 @@ void rbyte(void *buf, size_t n) {
 #elif defined(__linux__)
   long status = (long)syscall( SYS_getrandom, buf, n, 0 );
   if (status < 0 || status != n) {
-    error("cryptorng_linux() error: Status = %zu.\n", status);
+    Rf_error("cryptorng_linux() error: Status = %zu.\n", status);
   }
   
 #else
@@ -80,10 +81,10 @@ void rbyte(void *buf, size_t n) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SEXP rcrypto_(SEXP n_, SEXP type_) {
   
-  if (asInteger(n_) <= 0) {
-    error("rcrypto_(): 'n' must be a positive integer");
+  if (Rf_asInteger(n_) <= 0) {
+    Rf_error("rcrypto_(): 'n' must be a positive integer");
   }
-  size_t n = (size_t)asInteger(n_);
+  size_t n = (size_t)Rf_asInteger(n_);
   void *buf = R_alloc(n, 1);
   
   rbyte(buf, n);

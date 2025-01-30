@@ -2,7 +2,7 @@
 % Please edit documentation in R/encrypt.R
 \name{decrypt}
 \alias{decrypt}
-\title{Decrypt an ecnrypted object}
+\title{Decrypt an encrypted object}
 \usage{
 decrypt(
   src,
@@ -33,7 +33,7 @@ to be authenticated.  See vignette on 'Additional Data'.}
 Decrypted, unserialized R object
 }
 \description{
-Decrypt an ecnrypted object
+Decrypt an encrypted object
 }
 \examples{
 key <- argon2('my key')
