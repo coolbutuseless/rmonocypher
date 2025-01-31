@@ -1,7 +1,7 @@
 Package: rmonocypher
 Type: Package
 Title: Easy Encryption of R Objects using Strong Modern Cryptography
-Version: 0.1.7.9001
+Version: 0.1.8
 Authors@R: c(
     person("Mike", "Cheng", role = c("aut", "cre", 'cph'), email = "mikefc@coolbutuseless.com"),
     person("Loup", "Vaillant", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library"),
@@ -9,10 +9,11 @@ Authors@R: c(
     person("Fabio", "Scotomi", role = c("aut", "cph"), comment = "Author and copyright holder of the included 'monocyper' library")
     )
 Maintainer: Mike Cheng <mikefc@coolbutuseless.com>
-Description: Easy-to-use encryption of R objects using modern cryptography.
+Description: Encrypt R objects to a raw vector or file using modern cryptographic
+    techniques.  Password-based key derivation is with 'Argon2' (<https://en.wikipedia.org/wiki/Argon2>).
     Objects are serialized and then encrypted using 'XChaCha20-Poly1305' (<https://en.wikipedia.org/wiki/ChaCha20-Poly1305>)
     which follows RFC 8439 for authenticated encryption (<https://en.wikipedia.org/wiki/Authenticated_encryption>).
-    Cryptographic functions are provided by the 'monocypher' 'C' library (<https://monocypher.org>).
+    Cryptographic functions are provided by the included 'monocypher' 'C' library (<https://monocypher.org>).
 URL: https://github.com/coolbutuseless/rmonocypher
 BugReports: https://github.com/coolbutuseless/rmonocypher/issues
 License: MIT + file LICENSE
@@ -25,7 +26,7 @@ Suggests:
 Depends:
     R (>= 3.4.0)
 Copyright: This package includes the 'monocypher' library written by Loup Vaillant,
-    Michael Savage and Fabio Scotomi. See file 'inst/LICENSE-monocypher.md' for 
-    the license for 'monocypher'.
+    Michael Savage and Fabio Scotomi. This library is included under its CC-0
+    license. See file 'inst/LICENSE-monocypher.md' for detailed licensing information.
 Config/testthat/edition: 3
 VignetteBuilder: knitr
